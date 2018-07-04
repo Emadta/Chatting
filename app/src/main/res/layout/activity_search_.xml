@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="com.example.pcc.chatting.Search_Activity"
+    android:background="@color/colorbackground"
+    >
+    <android.support.v7.widget.Toolbar
+        android:layout_width="match_parent"
+        android:background="@color/colorPrimary"
+        android:id="@+id/tool_bar_search"
+        android:layout_height="wrap_content">
+        <android.support.design.widget.TextInputLayout
+            android:layout_width="317dp"
+            android:layout_height="match_parent"
+            android:layout_alignParentTop="true"
+            android:layout_centerHorizontal="true"
+            android:id="@+id/text_input_search">
+
+            <EditText
+                android:layout_width="317dp"
+                android:layout_height="match_parent"
+                android:hint="Search Username" />
+
+
+        </android.support.design.widget.TextInputLayout>
+
+    </android.support.v7.widget.Toolbar>
+    <android.support.v7.widget.CardView
+        android:id="@+id/card_view"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/tool_bar_search"
+        android:visibility="invisible"
+        >
+        <RelativeLayout
+            android:id="@+id/linear_layout_search"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:weightSum="1"
+            >
+
+
+            <ImageView
+                android:layout_width="53dp"
+                android:layout_height="71dp"
+                android:src="@drawable/img"
+                android:layout_weight="0.05"
+                android:id="@+id/imageView_search" />
+
+            <TextView
+                android:layout_width="80dp"
+                android:layout_height="25dp"
+                android:id="@+id/display_name_search"
+                android:layout_alignParentTop="true"
+                android:layout_toEndOf="@+id/imageView_search" />
+
+            <TextView
+                android:id="@+id/textView3"
+                android:layout_width="50dp"
+                android:layout_height="25dp"
+                android:text="Add"
+                android:textAlignment="center"
+                android:textSize="20dp"
+                android:layout_centerVertical="true"
+                android:layout_alignParentEnd="true" />
+
+
+        </RelativeLayout>
+
+
+
+    </android.support.v7.widget.CardView>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/textview_Notfound"
+        android:layout_below="@+id/card_view"
+        android:layout_centerInParent="true"
+        android:text="NOT FOUND"
+        android:textSize="20dp"
+        android:visibility="invisible"
+        />
+
+    <Button
+        android:id="@+id/button_search"
+        android:layout_width="54dp"
+        android:layout_height="52dp"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentTop="true"
+        android:background="@color/colorPrimary"
+        android:drawableBottom="@android:drawable/ic_menu_search" />
+
+</RelativeLayout>
