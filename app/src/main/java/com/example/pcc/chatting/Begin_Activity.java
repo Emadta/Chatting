@@ -25,7 +25,7 @@ public class Begin_Activity extends AppCompatActivity {
     Boolean result;
     Intent intent;
     public static Socket s=null;
-    public static final String IP = "192.168.1.114";
+    public static final String IP = "192.168.1.107";
     public static ObjectOutputStream oos=null;
     public static ObjectInputStream ois=null;
     @Override
@@ -47,9 +47,10 @@ public class Begin_Activity extends AppCompatActivity {
                 try {
                     s = new Socket(IP,8080);
                    // String mac= Get_mac();
-                    String mac = "52-8C-A0-1F-7A-DD";
-                   // String mac = "51-8C-A0-0F-7A-DD";
-                    //String mac = "s2-23-45-6f-sa-45";
+                    //String mac = "s25-22-45-6f-fa-41"; // han
+                    //String mac = "52-8C-A0-1F-7A-DD"; // abd
+                    String mac = "s25-22-45-6f-sa-45"; // mat
+                   // String mac = "52-2F-45-6f-sa-15"; // ramy
 
                     oos = new ObjectOutputStream(new BufferedOutputStream(s.getOutputStream()));
                     oos.writeObject(mac);

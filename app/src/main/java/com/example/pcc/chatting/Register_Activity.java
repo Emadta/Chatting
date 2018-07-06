@@ -51,58 +51,36 @@ public class Register_Activity extends AppCompatActivity {
 
     void Register ()
     {
-        /*Thread t1 = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    oos.writeInt(1);
-                    oos.flush();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-        });
-        t1.start();*/
-
-
         Thread t=new Thread(new Runnable() {
             @Override
             public void run() {
                 try {
                     oos.writeInt(1);
                     oos.flush();
-                    Send_Receive();
+
+                    //SEND INFORMATION
+                    user_details = new User(txin1.getEditText().getText().toString(),txin3.getEditText().getText().toString(), txin2.getEditText().getText().toString());
+                    oos.writeObject(user_details);
+                    oos.flush();
+
+                    result = ois.readBoolean();
+                    // VALIDATE IF ACCOUNT IS ALREADY USED OR NOT
+                    if (!result)
+                    { // IS USED (MSG BOX)
+                        Alert_Dialog();
+                    }
+                    else if (result) {
+                        // IS NOT USED , THAT MEAN IS ACCEPTABLE
+                        // save username to use it in messaging
+                        Save_Username (txin1.getEditText().getText().toString());
+                        Go_Main_Activity();
+                    }
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
             }
         });
         t.start();
-    }
-
-    void Send_Receive() throws IOException
-    {
-            //SEND INFORMATION
-        long x=1;
-            user_details = new User(txin1.getEditText().getText().toString(),txin3.getEditText().getText().toString(), txin2.getEditText().getText().toString());
-            oos.writeObject(user_details);
-            oos.flush();
-
-            result = ois.readBoolean();
-            // VALIDATE IF ACCOUNT IS ALREADY USED OR NOT
-            if (!result)
-            { // IS USED (MSG BOX)
-                Alert_Dialog();
-            }
-            else if (result) {
-                // IS NOT USED , THAT MEAN IS ACCEPTABLE
-
-                // save username to use it in messaging
-                Save_Username (txin1.getEditText().getText().toString());
-
-                Go_Main_Activity();
-            }
-
     }
 
     void Alert_Dialog()

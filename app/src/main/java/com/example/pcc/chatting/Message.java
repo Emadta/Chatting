@@ -19,6 +19,15 @@ import java.net.ServerSocket;
         private String kind;
         private static final long serialVersionUID = 2L;
 
+        public Message(String msg, String from, String to, String type, String kind, long id) {
+            this.msg = msg;
+            this.from = from;
+            this.to = to;
+            this.id = id;
+            this.type = type;
+            this.kind = kind;
+        }
+
         public Message(String msg, String from, String to, String type, String kind) {
             this.msg = msg;
             this.from = from;

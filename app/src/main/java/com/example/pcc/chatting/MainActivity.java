@@ -1,5 +1,6 @@
 package com.example.pcc.chatting;
 
+import android.content.Context;
 import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -10,20 +11,13 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 
-import org.json.simple.JSONArray;
-import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
-import org.json.simple.parser.ParseException;
-
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.Map;
 
 public class MainActivity extends AppCompatActivity {
     private Toolbar toolbar;
@@ -32,53 +26,34 @@ public class MainActivity extends AppCompatActivity {
     ArrayList<User> listFriends =new ArrayList();
     static String userName;
     Intent intent;
-    private  JSONArray jsonArray = new JSONArray();
-    User ListFriends;
+    String FileListFriends = "ListUsers.txt";
+    boolean check;
     
     @Override
     protected void onCreate(Bundle savedInstanceState)
-    {
-
-        super.onCreate(savedInstanceState);
+    {   super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
-        // to load username from File , to use it in other Activities
-        init_username();
-
         toolbar=(Toolbar)findViewById(R.id.tool_bar);
         setSupportActionBar(toolbar);
         getSupportActionBar().setTitle("4Chat");
 
+        /*File dir = getFilesDir();
+        File file = new File(dir, "ListUsers.txt");
+        boolean deleted = file.delete();
+        File f = new File(dir, "UserName.txt");
+        boolean deleted1 = f.delete();*/
+
+        // username (From)
+        init_username();
         init_recycleview();
+        CheckLoadFriends();
+        PutSearchResultRecycler();
 
     }
 
     void init_recycleview ()
     {
-        LoadListFriends();
-
-        Intent intent = getIntent();
-        User new_user = new User(intent.getStringExtra("userName"));
-        if (new_user.getUserName() !=null && LoadListFriendsToVerfiy(new_user.getUserName())) {
-            listFriends.add(new_user);
-            StoreListFriends(new_user);
-        }
-
-
-        //// FIXME edit
-        // TO PUT USER IN RECYCLERVIEW THAT YOU CLICKED ON HIS CARD VIEW (GET OBJECT) FROM SEARCH_ACTIVITY
-        /*User new_user = Search_Activity.user_search_result;
-
-        // TO PUT NEW USER IN LIST THAT IS IN RECYCLEVIEW
-        if (new_user !=null) {
-            listFriends.add(new_user);
-            StoreListFriends(new_user);
-        }*/
-
-        //// TODO: here to make the sender is the top of recyclerview //ArraylistObj.remove(object); && ArrayListObj.add(position, Object);//
-        //// TODO: and notifyitemremoved then notifyiteminserted
-
-        // user_adapter to bind info with recycleview by put new message in listFriends and notify it by recycleview
+        // user_adapter to bind info with recycleview by put new msgList in listFriends and notify it by recycleview
         user_adapter=new User_Adapter(listFriends);
 
         recyclerView=(RecyclerView) findViewById(R.id.recycler_view_friends);
@@ -97,7 +72,6 @@ public class MainActivity extends AppCompatActivity {
         recyclerView.setAdapter(user_adapter);
     }
 
-           // username (From)
     void init_username ()
     {
         try {
@@ -119,81 +93,67 @@ public class MainActivity extends AppCompatActivity {
         return user;
     }
 
-           // store listFriends friends
-    void StoreListFriends (User user)
+    void CheckLoadFriends()
     {
-            try {
-                Map map = new LinkedHashMap(1);
-                map.put("userName", user.getUserName());
-                jsonArray.add(map);
-                String json = jsonArray.toJSONString();
-                StoreToFile(json);
-            } catch (FileNotFoundException e) {
-                e.printStackTrace();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+        check=fileExists(this,FileListFriends);
+        if (check)
+            LoadFriendsFromFile();
     }
 
-    void StoreToFile (String json) throws IOException
+    void LoadFriendsFromFile()
     {
-            FileOutputStream fos = openFileOutput("ListUsers.json",MODE_PRIVATE);
-            fos.write(json.getBytes());
-            fos.flush();
-            fos.close();
-    }
-
-           // load listFriends friends
-    String LoadFriendsFromFile()
-    { String user = "";
-        FileInputStream fis = null;
+        ArrayList<User> List = null;
+        FileInputStream fis;
         try {
-            fis = openFileInput("ListUsers.json");
-            int size = fis.available();
-            byte [] buffer = new byte[size];
-            fis.read(buffer);
-            fis.close();
-            user = new String(buffer);
-        } catch (FileNotFoundException e) {
+            fis = openFileInput(FileListFriends);
+            ObjectInputStream Ois = new ObjectInputStream(fis);
+            List = (ArrayList<User>) Ois.readObject();
+            Ois.close();
+        } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
+        }
+        for (User user : List)
+        {
+            listFriends.add(user);
+        }
+    }
+
+    void PutSearchResultRecycler ()
+    {
+        // TO PUT USER IN RECYCLERVIEW THAT YOU CLICKED ON HIS CARD VIEW (GET OBJECT) FROM SEARCH_ACTIVITY
+        Intent intent = getIntent();
+        User new_user = new User(intent.getStringExtra("userName"));
+
+        if (new_user.getUserName() !=null && LoadListFriendsToVerfiy(listFriends,new_user.getUserName())) {
+            listFriends.add(new_user);
+            StoreListFriends(listFriends);
+        }
+        //// TODO: here to make the sender is the top of recyclerview //ArraylistObj.remove(object); && ArrayListObj.add(position, Object);//
+        //// TODO: and notifyitemremoved then notifyiteminserted
+    }
+
+    void StoreListFriends (ArrayList<User> arrayList)
+    {
+        FileOutputStream fos = null;
+        try {
+            fos = openFileOutput(FileListFriends,MODE_PRIVATE);
+            ObjectOutputStream Oos = new ObjectOutputStream(fos);
+            Oos.writeObject(arrayList);
+            Oos.flush();
+            Oos.close();
         } catch (IOException e) {
             e.printStackTrace();
         }
-       return user;
-    }
 
-    void ConvertToJsonArray ()
-    {
-        JSONParser jsonParser = new JSONParser();
-        try {
-             jsonArray = (JSONArray) jsonParser.parse(LoadFriendsFromFile());
-            }catch (ParseException e1) {
-            e1.printStackTrace();
-            }
-    }
 
-    void LoadListFriends ()
-    {
-        ConvertToJsonArray();
-        Iterator<JSONObject> itr2 = jsonArray.iterator();
-        JSONObject user1;
-        while (itr2.hasNext()) {
-            user1 = itr2.next();
-            ListFriends = new User(user1.get("userName").toString());
-            listFriends.add(ListFriends);
-        }
     }
-
-           // this to verfiy if user is already added to listFriends
-    boolean LoadListFriendsToVerfiy (String user)
+                    // dont repeat user
+    boolean LoadListFriendsToVerfiy (ArrayList<User> arrayList , String Name)
     {
-        ConvertToJsonArray();
-        Iterator<JSONObject> itr2 = jsonArray.iterator();
-        JSONObject user1;
-        while (itr2.hasNext()) {
-            user1 = itr2.next();
-            if (user1.get("userName").toString().equals(user))
-                return false;
+        for (User user : arrayList)
+        {
+         if (user.getUserName().equals(Name))
+             return false;
         }
         return true;
     }
@@ -243,6 +203,15 @@ public class MainActivity extends AppCompatActivity {
 
 
         return super.onOptionsItemSelected(item);
+    }
+
+    boolean fileExists(Context context, String filename)
+    {
+        File file = context.getFileStreamPath(filename);
+        if(file == null || !file.exists()) {
+            return false;
+        }
+        return true;
     }
 
 }

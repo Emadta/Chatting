@@ -38,9 +38,9 @@ class Message_Adapter extends RecyclerView.Adapter<Message_Adapter.Myviewholder>
     public void onBindViewHolder(Message_Adapter.Myviewholder holder, int position) {
         Message message=list.get(position);
 
-                                  // for text message
+                                  // for text msgList
 
-                   // if msg = text and sender is (from)
+                   // if msgServer = text and sender is (from)
                    if (MainActivity.userName.equals(message.getFrom()) && Message.TEXT_MSG.equals(message.getType())) {
                        holder.linearLayout_left.setVisibility(LinearLayout.VISIBLE);
 
@@ -51,7 +51,7 @@ class Message_Adapter extends RecyclerView.Adapter<Message_Adapter.Myviewholder>
                        holder.img_left.setVisibility(ImageView.GONE);
 
                    }
-                   // if msg= text and is sender is (to)
+                   // if msgServer= text and is sender is (to)
                    else if (!MainActivity.userName.equals(message.getFrom()) && Message.TEXT_MSG.equals(message.getType())) {
                        holder.linearLayout_right.setVisibility(LinearLayout.VISIBLE);
 
@@ -62,9 +62,9 @@ class Message_Adapter extends RecyclerView.Adapter<Message_Adapter.Myviewholder>
                        holder.img_right.setVisibility(ImageView.GONE);
 
                    }
-                   // now if message is Image
+                   // now if msgList is Image
 
-                   // if msg = img and sender is (from)
+                   // if msgServer = img and sender is (from)
                    else if (MainActivity.userName.equals(message.getFrom()) && Message.IMAGE_MSG.equals(message.getType())) {
                        holder.linearLayout_left.setVisibility(LinearLayout.VISIBLE);
 
@@ -78,7 +78,7 @@ class Message_Adapter extends RecyclerView.Adapter<Message_Adapter.Myviewholder>
                        holder.img_left.setImageBitmap(Messages_Activity.send_img_to_adapter());
 
                    }
-                   // if msg= img and sender is (to)
+                   // if msgServer= img and sender is (to)
                    else if (!MainActivity.userName.equals(message.getTo()) && Message.IMAGE_MSG.equals(message.getType())) {
                        holder.linearLayout_right.setVisibility(LinearLayout.VISIBLE);
 
