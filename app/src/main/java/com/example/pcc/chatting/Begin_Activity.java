@@ -1,11 +1,18 @@
 package com.example.pcc.chatting;
 
+import android.Manifest;
+import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.os.Build;
+import android.support.annotation.RequiresApi;
+import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.widget.Toast;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
@@ -20,6 +27,8 @@ import java.net.NetworkInterface;
 import java.net.Socket;
 import java.net.SocketException;
 import java.net.UnknownHostException;
+import java.util.Collections;
+import java.util.List;
 
 public class Begin_Activity extends AppCompatActivity {
     Boolean result;
@@ -28,6 +37,7 @@ public class Begin_Activity extends AppCompatActivity {
     public static final String IP = "192.168.1.107";
     public static ObjectOutputStream oos=null;
     public static ObjectInputStream ois=null;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -46,11 +56,10 @@ public class Begin_Activity extends AppCompatActivity {
             public void run() {
                 try {
                     s = new Socket(IP,8080);
-                   // String mac= Get_mac();
-                    //String mac = "s25-22-45-6f-fa-41"; // han
-                    //String mac = "52-8C-A0-1F-7A-DD"; // abd
-                    String mac = "s25-22-45-6f-sa-45"; // mat
-                   // String mac = "52-2F-45-6f-sa-15"; // ramy
+                    //String mac= getMacAddr();
+                    //String mac = "s25-22-45-6f-fa-41"; // iniesta (my mobile)
+                    //String mac = "s25-22-45-6f-sa-45"; // xavi
+                    String mac = "54-8C-A0-0F-7A-DD"; //Phone Device
 
                     oos = new ObjectOutputStream(new BufferedOutputStream(s.getOutputStream()));
                     oos.writeObject(mac);
@@ -59,12 +68,10 @@ public class Begin_Activity extends AppCompatActivity {
                     // recieve from server , if user is signed in or was logged out
                     ois = new ObjectInputStream(new BufferedInputStream(s.getInputStream()));
 
-                    //// FIXME: must server send username also to use it in messaging , if user was signed in, username will be static
 
                     result = ois.readBoolean();
                     if (result)
                     {
-                          // // TODO: maybe   server send username to store it in file
                         Go_Main_Activity();
                     }
                     else
@@ -85,38 +92,33 @@ public class Begin_Activity extends AppCompatActivity {
         //// TODO: (save_macAddressFile) will be in signin_Activity ,server send mac address
     }
 
-
-
     // GET MAC ADDRESS
 
-    /*String Get_mac () throws SocketException, UnknownHostException {
-        InetAddress ip;
-        StringBuilder sb =null;
+    public static String getMacAddr() {
         try {
+            List<NetworkInterface> all = Collections.list(NetworkInterface.getNetworkInterfaces());
+            for (NetworkInterface nif : all) {
+                if (!nif.getName().equalsIgnoreCase("wlan0")) continue;
 
-            ip = InetAddress.getLocalHost();
+                byte[] macBytes = nif.getHardwareAddress();
+                if (macBytes == null) {
+                    return "";
+                }
 
-            NetworkInterface network = NetworkInterface.getByInetAddress(ip);
+                StringBuilder res1 = new StringBuilder();
+                for (byte b : macBytes) {
+                    res1.append(String.format("%02X:", b));
+                }
 
-            byte[] mac = network.getHardwareAddress();
-
-
-            sb = new StringBuilder();
-            for (int i = 0; i < mac.length; i++) {
-                sb.append(String.format("%02X%s", mac[i], (i < mac.length - 1) ? "-" : ""));
+                if (res1.length() > 0) {
+                    res1.deleteCharAt(res1.length() - 1);
+                }
+                return res1.toString();
             }
-
-        } catch (UnknownHostException | SocketException e) {
-
-            e.printStackTrace();
-
+        } catch (Exception ignored) {
         }
-        return sb.toString();
-    }*/
-
-
-
-
+        return "02:00:00:00:00:00";
+    }
 
 
     void Go_Main_Activity ()
@@ -126,41 +128,11 @@ public class Begin_Activity extends AppCompatActivity {
         finish();
     }
 
-
-
-
     void Go_Start_Activity ()
     {
         intent = new Intent(Begin_Activity.this,Start_Activity.class);
         startActivity(intent);
         finish();
-    }
-
-
-
-    void close ()
-    {
-        if (s!=null) {
-            try {
-                s.close();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-        if (oos!=null) {
-            try {
-                s.close();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-        if (ois!=null) {
-            try {
-                s.close();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
     }
 
     protected boolean isOnline()
@@ -173,6 +145,5 @@ public class Begin_Activity extends AppCompatActivity {
             return false;
         }
     }
-
 
 }

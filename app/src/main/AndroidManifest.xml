@@ -33,7 +33,6 @@
         <activity android:name=".Search_Activity"
             android:parentActivityName=".MainActivity"
             />
-        <activity android:name=".Image_Activity"></activity>
     </application>
 
 </manifest>

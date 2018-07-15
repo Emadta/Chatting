@@ -62,5 +62,10 @@
         android:background="@color/gray_msg"
         android:drawableStart="@android:drawable/ic_menu_gallery" />
 
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/textaa"
+        />
 
 </RelativeLayout>

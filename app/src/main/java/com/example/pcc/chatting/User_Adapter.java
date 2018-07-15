@@ -41,6 +41,7 @@ class User_Adapter extends RecyclerView.Adapter<User_Adapter.Myviewholder> {
                 intent.putExtra("To",user.getUserName());
                 v.getContext().startActivity(intent);
 
+
             }
         });
     }

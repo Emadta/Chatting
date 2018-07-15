@@ -23,7 +23,7 @@ public class MainActivity extends AppCompatActivity {
     private Toolbar toolbar;
     private User_Adapter user_adapter;
     private RecyclerView recyclerView;
-    ArrayList<User> listFriends =new ArrayList();
+    static ArrayList<User> listFriends =new ArrayList();
     static String userName;
     Intent intent;
     String FileListFriends = "ListUsers.txt";
@@ -37,11 +37,6 @@ public class MainActivity extends AppCompatActivity {
         setSupportActionBar(toolbar);
         getSupportActionBar().setTitle("4Chat");
 
-        /*File dir = getFilesDir();
-        File file = new File(dir, "ListUsers.txt");
-        boolean deleted = file.delete();
-        File f = new File(dir, "UserName.txt");
-        boolean deleted1 = f.delete();*/
 
         // username (From)
         init_username();
@@ -93,7 +88,7 @@ public class MainActivity extends AppCompatActivity {
         return user;
     }
 
-    void CheckLoadFriends()
+     void CheckLoadFriends()
     {
         check=fileExists(this,FileListFriends);
         if (check)
@@ -132,7 +127,7 @@ public class MainActivity extends AppCompatActivity {
         //// TODO: and notifyitemremoved then notifyiteminserted
     }
 
-    void StoreListFriends (ArrayList<User> arrayList)
+     void StoreListFriends (ArrayList<User> arrayList)
     {
         FileOutputStream fos = null;
         try {
@@ -144,8 +139,6 @@ public class MainActivity extends AppCompatActivity {
         } catch (IOException e) {
             e.printStackTrace();
         }
-
-
     }
                     // dont repeat user
     boolean LoadListFriendsToVerfiy (ArrayList<User> arrayList , String Name)

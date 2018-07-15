@@ -71,18 +71,16 @@ public class Search_Activity extends AppCompatActivity {
         Thread t = new Thread(new Runnable() {
             @Override
             public void run() {
-
                 try {
                     Send_Receive();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                } catch (ClassNotFoundException e) {
+                } catch (IOException | ClassNotFoundException e) {
                     e.printStackTrace();
                 }
             }
         });
         t.start();
     }
+
 
     void Send_Receive() throws IOException, ClassNotFoundException {
 
@@ -101,10 +99,11 @@ public class Search_Activity extends AppCompatActivity {
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    txt_notfound.setVisibility(TextView.VISIBLE);
                     cardView.setVisibility(CardView.INVISIBLE);
+                    txt_notfound.setVisibility(TextView.VISIBLE);
                 }
             });
+
         }
         else {
             // PUT USERNAME TO DISPLAY NAME SEARCH TEXTVIEW IN LINEAR LAYOUT AND IMAGEVIEW
@@ -146,6 +145,7 @@ public class Search_Activity extends AppCompatActivity {
                 Intent intent = new Intent(Search_Activity.this,MainActivity.class);
                 intent.putExtra("userName",username_search.getEditText().getText().toString());
                 startActivity(intent);
+                finish();
 
 
             }

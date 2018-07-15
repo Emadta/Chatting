@@ -1,6 +1,11 @@
 package com.example.pcc.chatting;
 
 
+import android.graphics.Bitmap;
+import android.net.Uri;
+
+import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.Serializable;
 
 import java.io.Serializable;
@@ -10,26 +15,60 @@ import java.net.ServerSocket;
     public class Message implements Serializable {
         public final static String TEXT_MSG="TEXT_MSG";
         public final static String IMAGE_MSG="IMAGE_MSG";
+        public final static String VIDEO_MSG="VIDEO_MSG";
+        public final static String AUDIO_MSG="AUDIO_MSG";
         private String msg;
         private String from;
         private String to;
-        private String date;
         private long id;
         private String type;
         private String kind;
         private static final long serialVersionUID = 2L;
+        private Uri uri;
+        private byte [] bytes;
+        private File file;
 
-        public Message(String msg, String from, String to, String type, String kind, long id) {
+
+        public Message(String msg, String from, String to, String type, String kind) {
             this.msg = msg;
             this.from = from;
             this.to = to;
-            this.id = id;
             this.type = type;
             this.kind = kind;
         }
 
-        public Message(String msg, String from, String to, String type, String kind) {
-            this.msg = msg;
+        public Message(byte[] bytes, String from, String to, String type, String kind) {
+            this.bytes=bytes;
+            this.from = from;
+            this.to = to;
+            this.type = type;
+            this.kind = kind;
+        }
+
+        public File getFile() {
+            return file;
+        }
+
+        public Message(File file, String from, String to, String type, String kind) {
+            this.file=file;
+
+            this.from = from;
+            this.to = to;
+            this.type = type;
+            this.kind = kind;
+        }
+
+        public Uri getUri() {
+            return uri;
+        }
+
+        public byte[] getBytes() {
+            return bytes;
+        }
+
+        public Message(Uri msg, String from, String to, String type, String kind) {
+            this.uri = msg;
+
             this.from = from;
             this.to = to;
             this.type = type;
@@ -53,10 +92,6 @@ import java.net.ServerSocket;
             return to;
         }
 
-        public String getDate() {
-            return date;
-        }
-
         public long getId() {
             return id;
         }
@@ -76,6 +111,8 @@ import java.net.ServerSocket;
         public String getKind() {
             return kind;
         }
+
+
     }
 
 
