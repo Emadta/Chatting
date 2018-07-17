@@ -56,7 +56,7 @@ public class Begin_Activity extends AppCompatActivity {
             public void run() {
                 try {
                     s = new Socket(IP,8080);
-                   // String mac= getMacAddr();
+                    //String mac= getMacAddr();
                     //String mac = "s25-22-45-6f-fa-41"; // iniesta (my mobile)
                     //String mac = "s25-22-45-6f-sa-45"; // xavi
                     String mac = "54-8C-A0-0F-7A-DD"; //Phone Device

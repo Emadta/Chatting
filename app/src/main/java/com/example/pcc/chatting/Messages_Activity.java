@@ -82,18 +82,17 @@ public class Messages_Activity extends AppCompatActivity {
     }
 
     void init_recycleview() {
-        // this listFriends to add new msgList to recycleview
+
         listMessages = new ArrayList<>();
+
         listMessagesRecive = new ArrayList<>();
 
         btn_send = (Button) findViewById(R.id.btn_send_msg);
 
-        // this button to go to gallery and got image
         btn_pick_img = (Button) findViewById(R.id.btn_pick_img);
 
         btn_pick_vid = (Button) findViewById(R.id.btn_pick_vid);
 
-        // this to write msgList
         editText = (EditText) findViewById(R.id.send_msg);
 
         // user_adapter to bind info with recycleview by put new msgList in listFriends and notify it by recycleview
@@ -113,12 +112,11 @@ public class Messages_Activity extends AppCompatActivity {
 
         recyclerView.setHasFixedSize(true);
 
-        // finally, put message_adapter to recycleview , message_adapter contents listFriends
         recyclerView.setAdapter(message_adapter);
     }
 
     private void CheckFileLoadMessages() {
-        check = fileExists(getApplicationContext(), FileMessages);
+        check = fileExists( FileMessages);
         if (check)
             LoadMessages(FileMessages);
     }
@@ -138,6 +136,20 @@ public class Messages_Activity extends AppCompatActivity {
             listMessages.add(message);
         }
 
+    }
+
+    ArrayList<Message> LoadMessagesOtherFriends (String File){
+        ArrayList<Message> List = null;
+        FileInputStream fis;
+        try {
+            fis = openFileInput(File);
+            ObjectInputStream Ois = new ObjectInputStream(fis);
+            List = (ArrayList<Message>) Ois.readObject();
+            Ois.close();
+        } catch (IOException | ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+        return List;
     }
 
     void SendButton() {
@@ -216,12 +228,23 @@ public class Messages_Activity extends AppCompatActivity {
                              AddMessageToRecyclerViewReceive();
                              break;
                      }
-                }
-                else
-                 {
+                 }
+                   else if (!(MSG.getFrom().equals(MainActivity.toName)))
+                   {
                      switch (MSG.getType())
                      {
                          case Message.TEXT_MSG :
+                             check=fileExists(MainActivity.userName + "," + MSG.getFrom() + ".txt");
+                             if (check){
+                                 runOnUiThread(new Runnable() {
+                                     @Override
+                                     public void run() {
+                                         Toast.makeText(getApplicationContext(),"FOUND",Toast.LENGTH_LONG).show();
+                                     }
+                                 });
+                                 listMessagesRecive = LoadMessagesOtherFriends(MainActivity.userName + "," + MSG.getFrom() + ".txt");
+                             }
+
                              listMessagesRecive.add(MSG);
                              StoreMessages(listMessagesRecive,MainActivity.userName + "," + MSG.getFrom() + ".txt");
                              break;
@@ -230,6 +253,10 @@ public class Messages_Activity extends AppCompatActivity {
                              Bitmap bitmap = BitmapFactory.decodeByteArray(MSG.getBytes(), 0, MSG.getBytes().length);
                              MsgBitmapString =StoreImageBitmap (bitmap);
                              MSG = new Message(MsgBitmapString, MSG.getFrom(), MSG.getTo(), MSG.getType(), MSG.getKind());
+                             check=fileExists(MainActivity.userName + "," + MSG.getFrom() + ".txt");
+                             if (check)
+                             listMessagesRecive = LoadMessagesOtherFriends(MainActivity.userName + "," + MSG.getFrom() + ".txt");
+
                              listMessagesRecive.add(MSG);
                              StoreMessages(listMessagesRecive,MainActivity.userName + "," + MSG.getFrom() + ".txt");
                              break;
@@ -238,15 +265,16 @@ public class Messages_Activity extends AppCompatActivity {
                              File file =convertBytesToFile(MSG.getBytes());
                              MsgVideo = StoreVideo(file.getAbsolutePath());
                              MSG = new Message(MsgVideo, MSG.getFrom(), MSG.getTo(), MSG.getType(), MSG.getKind());
+                             check=fileExists(MainActivity.userName + "," + MSG.getFrom() + ".txt");
+                             if (check)
+                             listMessagesRecive = LoadMessagesOtherFriends(MainActivity.userName + "," + MSG.getFrom() + ".txt");
+
                              listMessagesRecive.add(MSG);
                              StoreMessages(listMessagesRecive,MainActivity.userName + "," + MSG.getFrom() + ".txt");
                              break;
                      }
-
+                   }
                  }
-
-                }
-
             }
         });
         thread.start();
@@ -360,8 +388,8 @@ public class Messages_Activity extends AppCompatActivity {
         thread.start();
     }
 
-    boolean fileExists(Context context, String File) {
-        File file = context.getFileStreamPath(File);
+    boolean fileExists( String File) {
+        File file = getFileStreamPath(File);
         if (file == null || !file.exists()) {
             return false;
         }
