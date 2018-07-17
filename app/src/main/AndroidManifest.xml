@@ -22,7 +22,13 @@
         <activity android:name=".Signin_Activity" />
         <activity
             android:name=".Messages_Activity"
-            android:parentActivityName=".MainActivity" />
+            android:parentActivityName=".MainActivity"
+            >
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".MainActivity" />
+
+        </activity>
         <activity android:name=".Begin_Activity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -32,7 +38,12 @@
         </activity>
         <activity android:name=".Search_Activity"
             android:parentActivityName=".MainActivity"
-            />
+            >
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".MainActivity" />
+
+        </activity>
     </application>
 
 </manifest>

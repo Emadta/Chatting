@@ -7,9 +7,11 @@ import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
+import android.text.TextUtils;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.View;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -19,12 +21,12 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements ItemClickListener {
     private Toolbar toolbar;
-    private User_Adapter user_adapter;
+    User_Adapter user_adapter;
     private RecyclerView recyclerView;
-    static ArrayList<User> listFriends =new ArrayList();
-    static String userName;
+    ArrayList<User> listFriends =new ArrayList();
+    static String userName,toName;
     Intent intent;
     String FileListFriends = "ListUsers.txt";
     boolean check;
@@ -49,7 +51,7 @@ public class MainActivity extends AppCompatActivity {
     void init_recycleview ()
     {
         // user_adapter to bind info with recycleview by put new msgList in listFriends and notify it by recycleview
-        user_adapter=new User_Adapter(listFriends);
+        user_adapter=new User_Adapter(listFriends,R.layout.list_friends,this);
 
         recyclerView=(RecyclerView) findViewById(R.id.recycler_view_friends);
 
@@ -65,6 +67,7 @@ public class MainActivity extends AppCompatActivity {
         recyclerView.setHasFixedSize(true);
 
         recyclerView.setAdapter(user_adapter);
+        user_adapter.setClickListener(this);
     }
 
     void init_username ()
@@ -119,12 +122,10 @@ public class MainActivity extends AppCompatActivity {
         Intent intent = getIntent();
         User new_user = new User(intent.getStringExtra("userName"));
 
-        if (new_user.getUserName() !=null && LoadListFriendsToVerfiy(listFriends,new_user.getUserName())) {
+        if (new_user.getUserName() !=null && LoadListFriendsToVerfiy(new_user.getUserName(),listFriends)) {
             listFriends.add(new_user);
             StoreListFriends(listFriends);
         }
-        //// TODO: here to make the sender is the top of recyclerview //ArraylistObj.remove(object); && ArrayListObj.add(position, Object);//
-        //// TODO: and notifyitemremoved then notifyiteminserted
     }
 
      void StoreListFriends (ArrayList<User> arrayList)
@@ -141,14 +142,14 @@ public class MainActivity extends AppCompatActivity {
         }
     }
                     // dont repeat user
-    boolean LoadListFriendsToVerfiy (ArrayList<User> arrayList , String Name)
-    {
-        for (User user : arrayList)
+    boolean LoadListFriendsToVerfiy (String Name,ArrayList<User> List)
+    {  Boolean check=true;
+        for (User user : List)
         {
          if (user.getUserName().equals(Name))
-             return false;
+            check=false;
         }
-        return true;
+        return check;
     }
 
     @Override
@@ -205,6 +206,14 @@ public class MainActivity extends AppCompatActivity {
             return false;
         }
         return true;
+    }
+
+    @Override
+    public void onClick(View view, int position) {
+        final User user = listFriends.get(position);
+        toName = user.getUserName();
+        Intent intent=new Intent(MainActivity.this,Messages_Activity.class);
+        startActivity(intent);
     }
 
 }

@@ -2,7 +2,6 @@ package com.example.pcc.chatting;
 
 import android.Manifest;
 import android.annotation.TargetApi;
-import android.content.ContentResolver;
 import android.content.Context;
 import android.content.ContextWrapper;
 import android.content.Intent;
@@ -16,7 +15,6 @@ import android.os.Environment;
 import android.provider.MediaStore;
 import android.support.annotation.RequiresApi;
 import android.support.v4.app.ActivityCompat;
-import android.support.v4.content.CursorLoader;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
@@ -28,7 +26,6 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
-
 import java.io.ByteArrayOutputStream;
 import java.io.EOFException;
 import java.io.File;
@@ -39,35 +36,29 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-
+import java.util.Calendar;
 import static com.example.pcc.chatting.Begin_Activity.ois;
 import static com.example.pcc.chatting.Begin_Activity.oos;
 
 public class Messages_Activity extends AppCompatActivity {
 
-    Toolbar toolbarMessages;
-    static final int IMG_PICK = 10;
-    static final int VIDEO_PICK = 20;
-    static final int AUDIO_PICK = 30;
-    ArrayList<Message> listMessages;
+    private Toolbar toolbarMessages;
+    private static final int IMG_PICK = 10;
+    private static final int VIDEO_PICK = 20;
+    private ArrayList<Message> listMessages,listMessagesRecive;
     private RecyclerView recyclerView;
-    Message_Adapter message_adapter;
-    private Button btn_send;
-    private Button btn_pick_img;
+    private Message_Adapter message_adapter;
+    private Button btn_send,btn_pick_img,btn_pick_vid;
     private EditText editText;
-    Message msgServer;
-    String To;
-    String MsgVideo;
-    String video_selected_path,audio_selected_path,MsgBitmapString;
-    Intent intent;
-    String FileMessages;
-    boolean check;
-    byte[] byteArray;
-    long ImageId,VideoId,AudioId;
-    TextView textView;
-    private final Object lock1 = new Object();
-    Bitmap image;
+    private Message MSG;
+    private String MsgVideo,video_selected_path,MsgBitmapString,FileMessages;
+    private boolean check;
+    private byte[] byteArray;
+    private Bitmap image;
+    private TextView textView;
+
 
 
     @Override
@@ -76,26 +67,31 @@ public class Messages_Activity extends AppCompatActivity {
         setContentView(R.layout.activity_messages_);
         toolbarMessages = (Toolbar) findViewById(R.id.toolBarMessages);
         setSupportActionBar(toolbarMessages);
-        textView = (TextView) findViewById(R.id.textaa);
+        getSupportActionBar().setTitle(MainActivity.toName);
+        textView=(TextView) findViewById(R.id.aa);
 
 
         init_recycleview();
-        Get_TO_fromAdapter();
-        FileMessages = MainActivity.userName + "," + To + ".txt";
+        FileMessages = MainActivity.userName + "," + MainActivity.toName + ".txt";
+        Toast.makeText(this,FileMessages,Toast.LENGTH_LONG).show();
         CheckFileLoadMessages();
         SendButton();
         receive_messages();
         PickImageButton();
+        PickVideoButton();
     }
 
     void init_recycleview() {
         // this listFriends to add new msgList to recycleview
         listMessages = new ArrayList<>();
+        listMessagesRecive = new ArrayList<>();
 
         btn_send = (Button) findViewById(R.id.btn_send_msg);
 
         // this button to go to gallery and got image
         btn_pick_img = (Button) findViewById(R.id.btn_pick_img);
+
+        btn_pick_vid = (Button) findViewById(R.id.btn_pick_vid);
 
         // this to write msgList
         editText = (EditText) findViewById(R.id.send_msg);
@@ -121,13 +117,7 @@ public class Messages_Activity extends AppCompatActivity {
         recyclerView.setAdapter(message_adapter);
     }
 
-    void Get_TO_fromAdapter() {
-        intent = getIntent();
-        To = intent.getStringExtra("To");
-        getSupportActionBar().setTitle(To);
-    }
-
-    void CheckFileLoadMessages() {
+    private void CheckFileLoadMessages() {
         check = fileExists(getApplicationContext(), FileMessages);
         if (check)
             LoadMessages(FileMessages);
@@ -157,45 +147,104 @@ public class Messages_Activity extends AppCompatActivity {
 
                 if (!TextUtils.isEmpty(editText.getText().toString())) {
 
-                    //  to determine this msgList for who ,receive String username (TO)
-
-                    if (intent != null) {
                         DetermineTypeOfMessage("TEXT");
-                    }
                 }
             }
         });
     }
 
-    void receive_messages() {
-        Thread thread = new Thread(new Runnable() {
+    private void receive_messages() {
+
+         Thread thread = new Thread(new Runnable() {
             @Override
             public void run() {
                 while (true) {
                     try {
-                        msgServer = (Message) ois.readObject();
+                        MSG = (Message) ois.readObject();
                     } catch (EOFException e) {
                         break;
-                    } catch (IOException | ClassNotFoundException ignored) {
+                    } catch (IOException | ClassNotFoundException ignored) {}
+
+                    if (MainActivity.toName.equals(MSG.getFrom())){
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                Toast.makeText(getApplicationContext(),MainActivity.toName+","+MSG.getFrom(),Toast.LENGTH_LONG).show();
+                            }
+                        });
+                    }
+                    else {
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                Toast.makeText(getApplicationContext(),MainActivity.toName+","+"lol"+MSG.getFrom(),Toast.LENGTH_LONG).show();
+                            }
+                        });
                     }
 
-                    if (msgServer.getType().equals("TEXT_MSG")) {
-                        AddMessageToRecyclerViewReceive();
-                    }
+                 if (MSG.getFrom().equals(MainActivity.toName))
+                 {
+                     switch (MSG.getType())
+                     {
+                         case Message.TEXT_MSG :
+                             AddMessageToRecyclerViewReceive();
+                             break;
 
-                    else if (msgServer.getType().equals("IMAGE_MSG")) {
-                        Bitmap bitmap = BitmapFactory.decodeByteArray(msgServer.getBytes(), 0, msgServer.getBytes().length);
-                        MsgBitmapString =StoreImageBitmap (bitmap);
-                        msgServer = new Message(MsgBitmapString,msgServer.getFrom(),msgServer.getTo(),msgServer.getType(),msgServer.getKind());
-                        AddMessageToRecyclerViewReceive();
-                    }
+                         case Message.IMAGE_MSG :
+                             Bitmap bitmap = BitmapFactory.decodeByteArray(MSG.getBytes(), 0, MSG.getBytes().length);
+                             MsgBitmapString =StoreImageBitmap (bitmap);
+                             runOnUiThread(new Runnable() {
+                                 @Override
+                                 public void run() {
+                                     textView.setText(MsgBitmapString);
+                                 }
+                             });
+                             MSG = new Message(MsgBitmapString, MSG.getFrom(), MSG.getTo(), MSG.getType(), MSG.getKind());
+                             AddMessageToRecyclerViewReceive();
+                             break;
 
-                    else if (msgServer.getType().equals("VIDEO_MSG")) {
+                         case Message.VIDEO_MSG :
+                             File file =convertBytesToFile(MSG.getBytes());
+                             MsgVideo = StoreVideo(file.getAbsolutePath());
+                             runOnUiThread(new Runnable() {
+                                 @Override
+                                 public void run() {
+                                     textView.setText(MsgVideo);
+                                 }
+                             });
+                             MSG = new Message(MsgVideo, MSG.getFrom(), MSG.getTo(), MSG.getType(), MSG.getKind());
+                             AddMessageToRecyclerViewReceive();
+                             break;
+                     }
+                }
+                else
+                 {
+                     switch (MSG.getType())
+                     {
+                         case Message.TEXT_MSG :
+                             listMessagesRecive.add(MSG);
+                             StoreMessages(listMessagesRecive,MainActivity.userName + "," + MSG.getFrom() + ".txt");
+                             break;
 
-                        MsgVideo = StoreVideo(msgServer.getFile().getAbsolutePath());
-                        msgServer = new Message(MsgVideo,msgServer.getFrom(),msgServer.getTo(),msgServer.getType(),msgServer.getKind());
-                        AddMessageToRecyclerViewReceive();
-                    }
+                         case Message.IMAGE_MSG :
+                             Bitmap bitmap = BitmapFactory.decodeByteArray(MSG.getBytes(), 0, MSG.getBytes().length);
+                             MsgBitmapString =StoreImageBitmap (bitmap);
+                             MSG = new Message(MsgBitmapString, MSG.getFrom(), MSG.getTo(), MSG.getType(), MSG.getKind());
+                             listMessagesRecive.add(MSG);
+                             StoreMessages(listMessagesRecive,MainActivity.userName + "," + MSG.getFrom() + ".txt");
+                             break;
+
+                         case Message.VIDEO_MSG :
+                             File file =convertBytesToFile(MSG.getBytes());
+                             MsgVideo = StoreVideo(file.getAbsolutePath());
+                             MSG = new Message(MsgVideo, MSG.getFrom(), MSG.getTo(), MSG.getType(), MSG.getKind());
+                             listMessagesRecive.add(MSG);
+                             StoreMessages(listMessagesRecive,MainActivity.userName + "," + MSG.getFrom() + ".txt");
+                             break;
+                     }
+
+                 }
+
                 }
 
             }
@@ -204,65 +253,82 @@ public class Messages_Activity extends AppCompatActivity {
     }
 
     void DetermineTypeOfMessage(String type) {
-        if (type.equals("TEXT")) {
+        switch (type){
+            case "TEXT" :
+                MSG = new Message(editText.getText().toString().trim(), MainActivity.userName, MainActivity.toName, Message.TEXT_MSG, "private_chat");
+                AddMessageToRecyclerView(MSG);
+                editText.setText("");
+                break;
 
-            AddMessageToRecyclerView(editText.getText().toString().trim(), Message.TEXT_MSG);
-            editText.setText("");
+            case "IMAGE" :
+                MsgBitmapString = StoreImageBitmap(image);
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        textView.setText(MsgBitmapString);
+                    }
+                });
+                MSG = new Message(MsgBitmapString, MainActivity.userName, MainActivity.toName, Message.IMAGE_MSG, "private_chat");
+                AddMessageToRecyclerView(MSG);
+                break;
 
-        } else if (type.equals("IMAGE")) {
+            case "VIDEO" :
+                MsgVideo = StoreVideo(video_selected_path);
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        textView.setText(MsgVideo);
+                    }
+                });
+                MSG = new Message(MsgVideo, MainActivity.userName, MainActivity.toName, Message.VIDEO_MSG, "private_chat");
+                AddMessageToRecyclerView(MSG);
+                break;
 
-            MsgBitmapString = StoreImageBitmap(image);
-            AddMessageToRecyclerView(MsgBitmapString, Message.IMAGE_MSG);
 
-        } else if (type.equals("VIDEO")) {
-
-            MsgVideo = StoreVideo(video_selected_path);
-            AddMessageToRecyclerView(MsgVideo, Message.VIDEO_MSG);
-            textView.setText(MsgVideo);
-
-        } else if (type.equals("AUDIO")) {
-
-            //String MsgAudio = StoreAudio(audio_selected_path);
-            //AddMessageToRecyclerView(MsgAudio, Message.AUDIO_MSG);
-            textView.setText(audio_selected_path);
         }
-
-        SendToServer();
     }
 
-    void AddMessageToRecyclerView(String msg, String type) {
-        synchronized (lock1) {
+    void AddMessageToRecyclerView(Message Msg) {
 
-            msgServer = new Message(msg, MainActivity.userName, To, type, "private_chat");
-            listMessages.add(msgServer);
+            listMessages.add(Msg);
             int new_position = (listMessages.size() - 1);
             message_adapter.notifyItemInserted(new_position);
             recyclerView.scrollToPosition(new_position);
             StoreMessages(listMessages, FileMessages);
+            initilaizeToSend(Msg);
+    }
 
-            if(type.equals(Message.IMAGE_MSG)) {
+    void initilaizeToSend (Message Msg) {
+
+        switch (Msg.getType())
+        {
+            case Message.TEXT_MSG :
+                MSG = new Message(Msg.getMsg(), MainActivity.userName, MainActivity.toName, Msg.getType(), "private_chat");
+                break;
+
+            case Message.IMAGE_MSG :
                 ByteArrayOutputStream bytearrayoutputstream = new ByteArrayOutputStream();
                 image.compress(Bitmap.CompressFormat.PNG, 100, bytearrayoutputstream);
                 byteArray = bytearrayoutputstream.toByteArray();
-                image.recycle();
-                msgServer = new Message(byteArray, MainActivity.userName, To, type, "private_chat");
-            }
-            else if (type.equals(Message.VIDEO_MSG))
-            {
-                File file = new File(MsgVideo);
-                msgServer = new Message(file,MainActivity.userName, To, type, "private_chat");
-            }
+                MSG = new Message(byteArray, MainActivity.userName, MainActivity.toName, Msg.getType(), "private_chat");
+                break;
+
+            case Message.VIDEO_MSG :
+                byteArray = ConvertVideoToByteArray(MsgVideo);
+                MSG = new Message(byteArray,MainActivity.userName, MainActivity.toName, Msg.getType(), "private_chat");
+                break;
         }
+        SendToServer();
+
     }
 
     void AddMessageToRecyclerViewReceive() {
-        synchronized (lock1) {
-            listMessages.add(msgServer);
+            listMessages.add(MSG);
             int new_position = (listMessages.size() - 1);
             message_adapter.notifyItemInserted(new_position);
             //recyclerView.scrollToPosition(new_position);
             StoreMessages(listMessages, FileMessages);
-        }
+
     }
 
     void StoreMessages(ArrayList<Message> arrayList, String File) {
@@ -284,7 +350,7 @@ public class Messages_Activity extends AppCompatActivity {
             public void run() {
 
                 try {
-                    oos.writeObject(msgServer);
+                    oos.writeObject(MSG);
                     oos.flush();
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -302,14 +368,14 @@ public class Messages_Activity extends AppCompatActivity {
         return true;
     }
 
-   /* void PickImageButton() {
+    void PickImageButton() {
         btn_pick_img.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 pick_image();
             }
         });
-    }*/
+    }
 
     void pick_image() {    // TO ENTER TO INTENT THAT CAN PICK FROM IT
         Intent intent_pick_image = new Intent(Intent.ACTION_PICK);
@@ -328,75 +394,17 @@ public class Messages_Activity extends AppCompatActivity {
 
     }
 
-    String StoreImageBitmap(Bitmap bitmap) {
-
-        ContextWrapper cw = new ContextWrapper(getApplicationContext()); // path to /data/data/yourapp/app_data/imageDir
-
-        File directory = cw.getDir("imageDir", Context.MODE_PRIVATE); // Create imageDir
-
-        CheckMediaId("ImageId.txt");
-
-        File mypath = new File(directory, "IMG" + Long.toString(++ImageId) + ".jpg");
-        StoreMediaId(ImageId,"ImageId.txt");
-
-        FileOutputStream fos = null;
-        try {
-            fos = new FileOutputStream(mypath);
-            bitmap.compress(Bitmap.CompressFormat.PNG, 100, fos);
-            fos.close();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return mypath.getAbsolutePath();
-    }
-
-    void StoreMediaId(long id , String fildId) {
-        FileOutputStream fos = null;
-        try {
-            fos = openFileOutput(fildId, MODE_PRIVATE);
-            fos.write(Long.toString(id).getBytes());
-            fos.flush();
-            fos.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    void CheckMediaId(String fileId) {
-        boolean x = fileExists(this, fileId);
-        if (x)
-            ImageId = LoadMediaId(fileId);
-    }
-
-    long LoadMediaId(String fileId) {
-        long l = 0;
-        FileInputStream fis = null;
-        try {
-            fis = openFileInput(fileId);
-            int size = fis.available();
-            byte[] buffer = new byte[size];
-            fis.read(buffer);
-            fis.close();
-            String idString = new String(buffer);
-            l = Long.parseLong(idString);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return l;
-    }
-
-    void PickImageButton() {
-        btn_pick_img.setOnClickListener(new View.OnClickListener() {
-            @RequiresApi(api = Build.VERSION_CODES.M)
+    @TargetApi(Build.VERSION_CODES.M)
+    void PickVideoButton (){
+        btn_pick_vid.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-
                 Boolean permission = isStoragePermissionGranted();
                 if (permission)
-                pick_video();
+                    pick_video();
             }
         });
-    }  // // TODO
+    }
 
     void pick_video() {    // TO ENTER TO INTENT THAT CAN PICK FROM IT
         Intent intent_pick_Video = new Intent(Intent.ACTION_PICK);
@@ -415,30 +423,41 @@ public class Messages_Activity extends AppCompatActivity {
 
     }
 
-    void pick_audio() {    // TO ENTER TO INTENT THAT CAN PICK FROM IT
-        Intent intent = new Intent();
-        intent.setType("audio/*");
-        intent.setAction(Intent.ACTION_GET_CONTENT);
-        startActivityForResult(Intent.createChooser(intent,"Select Audio "), AUDIO_PICK);
-    }
+    String StoreImageBitmap(Bitmap bitmap) {
 
-    void PickAudioButton() {
-        btn_pick_img.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                pick_audio();
-            }
-        });
-    }  // // TODO
+        ContextWrapper cw = new ContextWrapper(getApplicationContext()); // path to /data/data/yourapp/app_data/imageDir
+
+        File directory = cw.getDir("imageDir", Context.MODE_PRIVATE); // Create imageDir
+
+        Calendar c = Calendar.getInstance();
+        SimpleDateFormat df = new SimpleDateFormat("yyyyMMddHHmmss");
+        String formattedDate = df.format(c.getTime());
+
+        File mypath = new File(directory, "IMG" + formattedDate + ".jpg");
+
+
+        FileOutputStream fos = null;
+        try {
+            fos = new FileOutputStream(mypath);
+            bitmap.compress(Bitmap.CompressFormat.PNG, 100, fos);
+            fos.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return mypath.getAbsolutePath();
+    }
 
     String StoreVideo(String path) {
 
         ContextWrapper cw = new ContextWrapper(this);
         File directory = cw.getDir("vidDir", Context.MODE_PRIVATE);
 
-        CheckMediaId("VideoId.txt");
-        File mypath = new File(directory, "Video" + Long.toString(++VideoId) + ".mp4");
-        StoreMediaId(VideoId,"VideoId.txt");
+        Calendar c = Calendar.getInstance();
+        SimpleDateFormat df = new SimpleDateFormat("yyyyMMddHHmmss");
+        String formattedDate = df.format(c.getTime());
+
+        File mypath = new File(directory, "Video" + formattedDate + ".mp4");
+
 
         try {
             FileOutputStream newFile = new FileOutputStream(mypath);
@@ -462,35 +481,35 @@ public class Messages_Activity extends AppCompatActivity {
         return mypath.getAbsolutePath();
     }
 
-    String StoreAudio(String path) {
-
-        ContextWrapper cw = new ContextWrapper(this);
-        File directory = cw.getDir("AudioDir", Context.MODE_PRIVATE);
-
-        CheckMediaId("AudioId.txt");
-        File mypath = new File(directory, "Audio" + Long.toString(++AudioId) + ".mp3");
-        StoreMediaId(AudioId,"AudioId.txt");
-
+    byte [] ConvertVideoToByteArray (String path) {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        FileInputStream fis = null;
         try {
-            FileOutputStream newFile = new FileOutputStream(mypath);
-            //path 0 = current path of the video
-            FileInputStream oldFile = new FileInputStream(path);
-
-            // Transfer bytes from in to out
+            fis = new FileInputStream(new File(path));
             byte[] buf = new byte[1024];
-            int len;
-            while ((len = oldFile.read(buf)) > 0) {
-                newFile.write(buf, 0, len);
-            }
-            newFile.flush();
-            newFile.close();
-            oldFile.close();
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
+            int n;
+            while (-1 != (n = fis.read(buf)))
+                baos.write(buf, 0, n);
         } catch (IOException e) {
             e.printStackTrace();
         }
-        return mypath.getAbsolutePath();
+        return baos.toByteArray();
+    }
+
+    File convertBytesToFile(byte[] bytearray) {
+         File outputFile=null;
+        try {
+
+            outputFile = File.createTempFile("file", "mp4", getCacheDir());
+            outputFile.deleteOnExit();
+            FileOutputStream fileoutputstream = new FileOutputStream(outputFile);
+            fileoutputstream.write(bytearray);
+            fileoutputstream.close();
+
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
+        return outputFile;
     }
 
     @Override
@@ -523,7 +542,7 @@ public class Messages_Activity extends AppCompatActivity {
                 }
             }
 
-            if (requestCode == VIDEO_PICK) // this to recognize (startactivityforresult)
+            else if (requestCode == VIDEO_PICK) // this to recognize (startactivityforresult)
             { // if we are here we back from gallery
 
                 // we got video as Uri
@@ -533,16 +552,6 @@ public class Messages_Activity extends AppCompatActivity {
                 video_selected_path = getRealPathFromURI(this, video_uri);
 
                 DetermineTypeOfMessage("VIDEO");
-
-            }
-            if (requestCode == AUDIO_PICK) // this to recognize (startactivityforresult)
-            { // if we are here we back from gallery
-
-                Uri audio_uri = data.getData();
-
-                audio_selected_path = _getRealPathFromURI(this,audio_uri);
-
-                DetermineTypeOfMessage("AUDIO");
 
             }
         }
@@ -565,15 +574,6 @@ public class Messages_Activity extends AppCompatActivity {
         }
     }
 
-    private String _getRealPathFromURI(Context context, Uri contentUri) {
-        String[] proj = { MediaStore.Audio.Media.DATA };
-        CursorLoader loader = new CursorLoader(context, contentUri, proj, null, null, null);
-        Cursor cursor = loader.loadInBackground();
-        int column_index = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.DATA);
-        cursor.moveToFirst();
-        return cursor.getString(column_index);
-    }
-
     @TargetApi(Build.VERSION_CODES.M)
     @RequiresApi(api = Build.VERSION_CODES.M)
     public  boolean isStoragePermissionGranted() {
@@ -585,10 +585,11 @@ public class Messages_Activity extends AppCompatActivity {
                 return false;
             }
         }
-        else { //permission is automatically granted on sdk<23 upon installation
+        else {
             return true;
         }
     }
+
     @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
 
@@ -601,5 +602,14 @@ public class Messages_Activity extends AppCompatActivity {
             }
         }
     }
+
+    @Override
+    public void onBackPressed()
+    {
+        Intent intent = new Intent(Messages_Activity.this,MainActivity.class);
+        startActivity(intent);
+        finish();
+    }
+
 
 }

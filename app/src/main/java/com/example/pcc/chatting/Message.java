@@ -49,15 +49,6 @@ import java.net.ServerSocket;
             return file;
         }
 
-        public Message(File file, String from, String to, String type, String kind) {
-            this.file=file;
-
-            this.from = from;
-            this.to = to;
-            this.type = type;
-            this.kind = kind;
-        }
-
         public Uri getUri() {
             return uri;
         }

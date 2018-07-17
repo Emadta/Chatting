@@ -15,10 +15,12 @@ import android.net.Uri;
 import android.os.Environment;
 import android.provider.MediaStore;
 import android.support.v7.widget.RecyclerView;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.MediaController;
@@ -53,12 +55,10 @@ class Message_Adapter extends RecyclerView.Adapter<Message_Adapter.Myviewholder>
                        // TO BIND INFO WITH INTERFACE
 
     @Override
-    public void onBindViewHolder(Message_Adapter.Myviewholder holder, int position) {
+    public void onBindViewHolder(final Message_Adapter.Myviewholder holder, int position) {
         final Message message=list.get(position);
 
-                                  // for text msgList
-
-                   // if msgServer = text and sender is (from)
+                   // if MSG = text and sender is (from)
                    if (MainActivity.userName.equals(message.getFrom()) && Message.TEXT_MSG.equals(message.getType())) {
                        holder.linearLayout_left.setVisibility(LinearLayout.VISIBLE);
 
@@ -73,7 +73,7 @@ class Message_Adapter extends RecyclerView.Adapter<Message_Adapter.Myviewholder>
                        holder.audio_left.setVisibility(Button.GONE);
 
                    }
-                   // if msgServer= text and is sender is (to)
+                   // if MSG= text and is sender is (to)
                    else if (!MainActivity.userName.equals(message.getFrom()) && Message.TEXT_MSG.equals(message.getType())) {
 
                        holder.linearLayout_right.setVisibility(LinearLayout.VISIBLE);
@@ -88,9 +88,8 @@ class Message_Adapter extends RecyclerView.Adapter<Message_Adapter.Myviewholder>
 
                        holder.audio_right.setVisibility(Button.GONE);
                    }
-                   // now if msgList is Image
 
-                   // if msgServer = img and sender is (from)
+
                    else if (MainActivity.userName.equals(message.getFrom()) && Message.IMAGE_MSG.equals(message.getType())) {
 
                        Bitmap bitmap = BitmapConvert (message.getMsg());
@@ -107,11 +106,10 @@ class Message_Adapter extends RecyclerView.Adapter<Message_Adapter.Myviewholder>
 
                        holder.audio_left.setVisibility(Button.GONE);
 
-                       // This recieve image bitmap from message_activity to put it in interface
                        holder.img_left.setImageBitmap(bitmap);
 
                    }
-                   // if msgServer= img and sender is (to)
+
                    else if (!MainActivity.userName.equals(message.getFrom()) && Message.IMAGE_MSG.equals(message.getType())) {
 
                        Bitmap bitmap = BitmapConvert (message.getMsg());
@@ -147,13 +145,14 @@ class Message_Adapter extends RecyclerView.Adapter<Message_Adapter.Myviewholder>
                        holder.audio_left.setVisibility(Button.GONE);
 
                        MediaController mediaController = new MediaController(this.mcontext);
-                       mediaController.setAnchorView(holder.vid_left);
                        holder.vid_left.setVideoPath(message.getMsg());
                        holder.vid_left.setMediaController(mediaController);
-                       holder.vid_left.start();
+                               holder.vid_left.start();
+
+
 
                    }
-                   // if msgServer= img and sender is (to)
+
                    else if (!MainActivity.userName.equals(message.getFrom()) && Message.VIDEO_MSG.equals(message.getType())) {
 
                        holder.linearLayout_right.setVisibility(LinearLayout.VISIBLE);
@@ -169,10 +168,11 @@ class Message_Adapter extends RecyclerView.Adapter<Message_Adapter.Myviewholder>
                        holder.audio_right.setVisibility(Button.GONE);
 
                        MediaController mediaController = new MediaController(this.mcontext);
-                       mediaController.setAnchorView(holder.vid_right);
                        holder.vid_right.setVideoPath(message.getMsg());
                        holder.vid_right.setMediaController(mediaController);
-                       holder.vid_right.start();
+                               holder.vid_right.start();
+
+
 
                    }
 
@@ -215,7 +215,7 @@ class Message_Adapter extends RecyclerView.Adapter<Message_Adapter.Myviewholder>
                            }
                        });
                    }
-                   // if msgServer= img and sender is (to)
+
                    else if (!MainActivity.userName.equals(message.getFrom()) && Message.AUDIO_MSG.equals(message.getType())) {
 
                        holder.linearLayout_right.setVisibility(LinearLayout.VISIBLE);
@@ -260,6 +260,7 @@ class Message_Adapter extends RecyclerView.Adapter<Message_Adapter.Myviewholder>
 
 
 
+
         Myviewholder(View itemView) {
             super(itemView);
 
@@ -279,6 +280,7 @@ class Message_Adapter extends RecyclerView.Adapter<Message_Adapter.Myviewholder>
 
             audio_left = (ToggleButton) itemView.findViewById(R.id.left_btn_audio);
             audio_right = (ToggleButton) itemView.findViewById(R.id.right_btn_audio);
+
 
         }
     }

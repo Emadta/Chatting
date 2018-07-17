@@ -16,10 +16,11 @@
 
         <ImageView
             android:id="@+id/chat_left_img_view"
-            android:layout_width="100dp"
-            android:layout_height="100dp"
+            android:layout_width="200dp"
+            android:layout_height="200dp"
             android:layout_gravity="center"
             android:layout_margin="10dp"
+
             />
 
         <TextView
@@ -34,8 +35,8 @@
             />
 
         <VideoView
-            android:layout_width="160dp"
-            android:layout_height="160dp"
+            android:layout_width="200dp"
+            android:layout_height="200dp"
             android:id="@+id/left_video_view"
             />
         <ToggleButton
@@ -60,8 +61,8 @@
         >
         <ImageView
             android:id="@+id/chat_right_img_view"
-            android:layout_width="100dp"
-            android:layout_height="100dp"
+            android:layout_width="200dp"
+            android:layout_height="200dp"
             android:layout_gravity="center"
             android:layout_margin="10dp"
             />
@@ -79,9 +80,10 @@
             />
 
         <VideoView
-            android:layout_width="160dp"
-            android:layout_height="160dp"
+            android:layout_width="200dp"
+            android:layout_height="200dp"
             android:id="@+id/right_video_view"
+
             />
 
         <ToggleButton

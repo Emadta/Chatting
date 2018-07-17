@@ -1,5 +1,6 @@
 package com.example.pcc.chatting;
 
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
@@ -26,6 +27,7 @@ public class Signin_Activity extends AppCompatActivity {
     String password;
     String resultUsername;
 
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -37,16 +39,13 @@ public class Signin_Activity extends AppCompatActivity {
         password = textInputLayout1.getEditText().getText().toString();
 
         btn_signin = (Button) findViewById(R.id.btn_sign_in);
-        btn_signin.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-
-                Sign_In();
+                btn_signin.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        Sign_In();
+                    }
+                });
             }
-
-        });
-    }
-
 
     void Sign_In() {
         Thread t = new Thread(new Runnable() {
@@ -55,6 +54,7 @@ public class Signin_Activity extends AppCompatActivity {
 
                 try {
                     oos.writeInt(2);
+                    oos.flush();
                     Send_Receive();
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -123,7 +123,7 @@ public class Signin_Activity extends AppCompatActivity {
                 alertdialog.setPositiveButton("OK", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-                        dialog.cancel();
+                        dialog.dismiss();
                     }
                 });
                 alertdialog.show();
