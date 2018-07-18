@@ -7,12 +7,11 @@ import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
-import android.text.TextUtils;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -20,16 +19,20 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.ArrayList;
+import static com.example.pcc.chatting.Begin_Activity.ois;
 
 public class MainActivity extends AppCompatActivity implements ItemClickListener {
     private Toolbar toolbar;
     User_Adapter user_adapter;
     private RecyclerView recyclerView;
     ArrayList<User> listFriends =new ArrayList();
+    ArrayList<Message> list;
     static String userName,toName;
     Intent intent;
     String FileListFriends = "ListUsers.txt";
     boolean check;
+    volatile boolean inMainActivity;
+    Message MSG;
     
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -38,8 +41,10 @@ public class MainActivity extends AppCompatActivity implements ItemClickListener
         toolbar=(Toolbar)findViewById(R.id.tool_bar);
         setSupportActionBar(toolbar);
         getSupportActionBar().setTitle("4Chat");
+        list =new ArrayList<>();
+        inMainActivity =true;
 
-
+        RecieveMessages();
         // username (From)
         init_username();
         init_recycleview();
@@ -212,8 +217,71 @@ public class MainActivity extends AppCompatActivity implements ItemClickListener
     public void onClick(View view, int position) {
         final User user = listFriends.get(position);
         toName = user.getUserName();
+        SwitchThread();
         Intent intent=new Intent(MainActivity.this,Messages_Activity.class);
         startActivity(intent);
     }
+
+    private void SwitchThread() {
+        if (inMainActivity)
+            inMainActivity =false;
+
+        Log.d("1MAIN","step3");
+    }
+
+    void RecieveMessages (){
+         Log.d("1MAIN","step1");
+            Thread thread = new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    while (inMainActivity)
+                    {
+                        try {
+                            MSG = (Message) ois.readObject();
+                            Log.d("MAIN1ACTIV","step2");
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        } catch (ClassNotFoundException e) {
+                            e.printStackTrace();
+                        }
+                        boolean check = fileExists(getApplicationContext(),userName + "," + MSG.getFrom() + ".txt");
+                        if (check)
+                            list = LoadMessages(userName + "," + MSG.getFrom() + ".txt");
+
+                        list.add(MSG);
+                        StoreMessages(list,userName + "," + MSG.getFrom() + ".txt");
+                    }
+                }
+            });
+            thread.start();
+    }
+
+    ArrayList<Message> LoadMessages (String File){
+        ArrayList<Message> List = null;
+        FileInputStream fis;
+        try {
+            fis = openFileInput(File);
+            ObjectInputStream Ois = new ObjectInputStream(fis);
+            List = (ArrayList<Message>) Ois.readObject();
+            Ois.close();
+        } catch (IOException | ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+        return List;
+    }
+
+    void StoreMessages(ArrayList<Message> arrayList, String File) {
+        FileOutputStream fos;
+        try {
+            fos = openFileOutput(File, MODE_PRIVATE);
+            ObjectOutputStream Oos = new ObjectOutputStream(fos);
+            Oos.writeObject(arrayList);
+            Oos.flush();
+            Oos.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
 
 }

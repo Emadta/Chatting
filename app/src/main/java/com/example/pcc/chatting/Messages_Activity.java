@@ -21,6 +21,7 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -57,7 +58,7 @@ public class Messages_Activity extends AppCompatActivity {
     private boolean check;
     private byte[] byteArray;
     private Bitmap image;
-    private TextView textView;
+    volatile boolean inMessageActivity;
 
 
 
@@ -68,7 +69,8 @@ public class Messages_Activity extends AppCompatActivity {
         toolbarMessages = (Toolbar) findViewById(R.id.toolBarMessages);
         setSupportActionBar(toolbarMessages);
         getSupportActionBar().setTitle(MainActivity.toName);
-        textView=(TextView) findViewById(R.id.aa);
+        inMessageActivity=true;
+
 
 
         init_recycleview();
@@ -166,117 +168,84 @@ public class Messages_Activity extends AppCompatActivity {
     }
 
     private void receive_messages() {
+        Log.d("1MSG","step1");
+            Thread thread = new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    while (true) {
+                        try {
+                            MSG = (Message) ois.readObject();
+                            Log.d("1MSG","step2");
+                        } catch (EOFException e) {
+                            break;
+                        } catch (IOException | ClassNotFoundException ignored) {}
 
-         Thread thread = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                while (true) {
-                    try {
-                        MSG = (Message) ois.readObject();
-                    } catch (EOFException e) {
-                        break;
-                    } catch (IOException | ClassNotFoundException ignored) {}
+                        if (MainActivity.toName.equals(MSG.getFrom())){
+                            runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    Toast.makeText(getApplicationContext(),MainActivity.toName+","+MSG.getFrom(),Toast.LENGTH_LONG).show();
+                                }
+                            });
+                        }
+                        else {
+                            runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    Toast.makeText(getApplicationContext(),MainActivity.toName+","+"lol"+MSG.getFrom(),Toast.LENGTH_LONG).show();
+                                }
+                            });
+                        }
 
-                    if (MainActivity.toName.equals(MSG.getFrom())){
-                        runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                Toast.makeText(getApplicationContext(),MainActivity.toName+","+MSG.getFrom(),Toast.LENGTH_LONG).show();
+                        if (MSG.getFrom().equals(MainActivity.toName))
+                        {
+                            switch (MSG.getType())
+                            {
+                                case Message.TEXT_MSG :
+                                    AddMessageToRecyclerViewReceive();
+                                    break;
+
+                                case Message.IMAGE_MSG :
+                                    Bitmap bitmap = BitmapFactory.decodeByteArray(MSG.getBytes(), 0, MSG.getBytes().length);
+                                    MsgBitmapString =StoreImageBitmap (bitmap);
+                                    MSG = new Message(MsgBitmapString, MSG.getFrom(), MSG.getTo(), MSG.getType(), MSG.getKind());
+                                    AddMessageToRecyclerViewReceive();
+                                    break;
+
+                                case Message.VIDEO_MSG :
+                                    File file =convertBytesToFile(MSG.getBytes());
+                                    MsgVideo = StoreVideo(file.getAbsolutePath());
+                                    MSG = new Message(MsgVideo, MSG.getFrom(), MSG.getTo(), MSG.getType(), MSG.getKind());
+                                    AddMessageToRecyclerViewReceive();
+                                    break;
                             }
-                        });
-                    }
-                    else {
-                        runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                Toast.makeText(getApplicationContext(),MainActivity.toName+","+"lol"+MSG.getFrom(),Toast.LENGTH_LONG).show();
+                        }
+                        else if (!(MSG.getFrom().equals(MainActivity.toName)))
+                        {
+                            switch (MSG.getType())
+                            {
+                                case Message.TEXT_MSG :
+                                    checkRecieve();
+                                    break;
+
+                                case Message.IMAGE_MSG :
+                                    Bitmap bitmap = BitmapFactory.decodeByteArray(MSG.getBytes(), 0, MSG.getBytes().length);
+                                    MsgBitmapString =StoreImageBitmap (bitmap);
+                                    MSG = new Message(MsgBitmapString, MSG.getFrom(), MSG.getTo(), MSG.getType(), MSG.getKind());
+                                    checkRecieve();
+                                    break;
+
+                                case Message.VIDEO_MSG :
+                                    File file =convertBytesToFile(MSG.getBytes());
+                                    MsgVideo = StoreVideo(file.getAbsolutePath());
+                                    MSG = new Message(MsgVideo, MSG.getFrom(), MSG.getTo(), MSG.getType(), MSG.getKind());
+                                    checkRecieve();
+                                    break;
                             }
-                        });
+                        }
                     }
-
-                 if (MSG.getFrom().equals(MainActivity.toName))
-                 {
-                     switch (MSG.getType())
-                     {
-                         case Message.TEXT_MSG :
-                             AddMessageToRecyclerViewReceive();
-                             break;
-
-                         case Message.IMAGE_MSG :
-                             Bitmap bitmap = BitmapFactory.decodeByteArray(MSG.getBytes(), 0, MSG.getBytes().length);
-                             MsgBitmapString =StoreImageBitmap (bitmap);
-                             runOnUiThread(new Runnable() {
-                                 @Override
-                                 public void run() {
-                                     textView.setText(MsgBitmapString);
-                                 }
-                             });
-                             MSG = new Message(MsgBitmapString, MSG.getFrom(), MSG.getTo(), MSG.getType(), MSG.getKind());
-                             AddMessageToRecyclerViewReceive();
-                             break;
-
-                         case Message.VIDEO_MSG :
-                             File file =convertBytesToFile(MSG.getBytes());
-                             MsgVideo = StoreVideo(file.getAbsolutePath());
-                             runOnUiThread(new Runnable() {
-                                 @Override
-                                 public void run() {
-                                     textView.setText(MsgVideo);
-                                 }
-                             });
-                             MSG = new Message(MsgVideo, MSG.getFrom(), MSG.getTo(), MSG.getType(), MSG.getKind());
-                             AddMessageToRecyclerViewReceive();
-                             break;
-                     }
-                 }
-                   else if (!(MSG.getFrom().equals(MainActivity.toName)))
-                   {
-                     switch (MSG.getType())
-                     {
-                         case Message.TEXT_MSG :
-                             check=fileExists(MainActivity.userName + "," + MSG.getFrom() + ".txt");
-                             if (check){
-                                 runOnUiThread(new Runnable() {
-                                     @Override
-                                     public void run() {
-                                         Toast.makeText(getApplicationContext(),"FOUND",Toast.LENGTH_LONG).show();
-                                     }
-                                 });
-                                 listMessagesRecive = LoadMessagesOtherFriends(MainActivity.userName + "," + MSG.getFrom() + ".txt");
-                             }
-
-                             listMessagesRecive.add(MSG);
-                             StoreMessages(listMessagesRecive,MainActivity.userName + "," + MSG.getFrom() + ".txt");
-                             break;
-
-                         case Message.IMAGE_MSG :
-                             Bitmap bitmap = BitmapFactory.decodeByteArray(MSG.getBytes(), 0, MSG.getBytes().length);
-                             MsgBitmapString =StoreImageBitmap (bitmap);
-                             MSG = new Message(MsgBitmapString, MSG.getFrom(), MSG.getTo(), MSG.getType(), MSG.getKind());
-                             check=fileExists(MainActivity.userName + "," + MSG.getFrom() + ".txt");
-                             if (check)
-                             listMessagesRecive = LoadMessagesOtherFriends(MainActivity.userName + "," + MSG.getFrom() + ".txt");
-
-                             listMessagesRecive.add(MSG);
-                             StoreMessages(listMessagesRecive,MainActivity.userName + "," + MSG.getFrom() + ".txt");
-                             break;
-
-                         case Message.VIDEO_MSG :
-                             File file =convertBytesToFile(MSG.getBytes());
-                             MsgVideo = StoreVideo(file.getAbsolutePath());
-                             MSG = new Message(MsgVideo, MSG.getFrom(), MSG.getTo(), MSG.getType(), MSG.getKind());
-                             check=fileExists(MainActivity.userName + "," + MSG.getFrom() + ".txt");
-                             if (check)
-                             listMessagesRecive = LoadMessagesOtherFriends(MainActivity.userName + "," + MSG.getFrom() + ".txt");
-
-                             listMessagesRecive.add(MSG);
-                             StoreMessages(listMessagesRecive,MainActivity.userName + "," + MSG.getFrom() + ".txt");
-                             break;
-                     }
-                   }
-                 }
-            }
-        });
+                }
+            });
         thread.start();
     }
 
@@ -290,24 +259,12 @@ public class Messages_Activity extends AppCompatActivity {
 
             case "IMAGE" :
                 MsgBitmapString = StoreImageBitmap(image);
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        textView.setText(MsgBitmapString);
-                    }
-                });
                 MSG = new Message(MsgBitmapString, MainActivity.userName, MainActivity.toName, Message.IMAGE_MSG, "private_chat");
                 AddMessageToRecyclerView(MSG);
                 break;
 
             case "VIDEO" :
                 MsgVideo = StoreVideo(video_selected_path);
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        textView.setText(MsgVideo);
-                    }
-                });
                 MSG = new Message(MsgVideo, MainActivity.userName, MainActivity.toName, Message.VIDEO_MSG, "private_chat");
                 AddMessageToRecyclerView(MSG);
                 break;
@@ -637,6 +594,24 @@ public class Messages_Activity extends AppCompatActivity {
         Intent intent = new Intent(Messages_Activity.this,MainActivity.class);
         startActivity(intent);
         finish();
+    }
+
+    void switchThread ()
+    {
+        if (inMessageActivity)
+            inMessageActivity=false;
+        Log.d("1MSG","step3");
+    }
+
+    void checkRecieve ()
+    {
+        check=fileExists(MainActivity.userName + "," + MSG.getFrom() + ".txt");
+        if (check){
+            listMessagesRecive = LoadMessagesOtherFriends(MainActivity.userName + "," + MSG.getFrom() + ".txt");
+        }
+
+        listMessagesRecive.add(MSG);
+        StoreMessages(listMessagesRecive,MainActivity.userName + "," + MSG.getFrom() + ".txt");
     }
 
 
