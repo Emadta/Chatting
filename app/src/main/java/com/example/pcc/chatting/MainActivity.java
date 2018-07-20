@@ -7,7 +7,6 @@ import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -19,46 +18,75 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.ArrayList;
+import java.util.concurrent.Semaphore;
 import static com.example.pcc.chatting.Begin_Activity.ois;
 
 public class MainActivity extends AppCompatActivity implements ItemClickListener {
     private Toolbar toolbar;
     User_Adapter user_adapter;
     private RecyclerView recyclerView;
-    ArrayList<User> listFriends =new ArrayList();
-    ArrayList<Message> list;
-    static String userName,toName;
+    ArrayList<User> listFriends = new ArrayList();
+    ArrayList<Message> listMessages = new ArrayList<>();
+    static String userName, toName;
     Intent intent;
-    String FileListFriends = "ListUsers.txt";
+    String FileListFriends;
     boolean check;
-    volatile boolean inMainActivity;
-    Message MSG;
-    
+    static Message MSG;
+    static Semaphore messageActivity = new Semaphore(0);
+    static Semaphore mainActivity = new Semaphore(0);
+    static Semaphore searchActivity = new Semaphore(0);
+    static boolean ThreadCreated = false;
+
     @Override
-    protected void onCreate(Bundle savedInstanceState)
-    {   super.onCreate(savedInstanceState);
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        toolbar=(Toolbar)findViewById(R.id.tool_bar);
+        toolbar = (Toolbar) findViewById(R.id.tool_bar);
         setSupportActionBar(toolbar);
         getSupportActionBar().setTitle("4Chat");
-        list =new ArrayList<>();
-        inMainActivity =true;
 
-        RecieveMessages();
-        // username (From)
-        init_username();
-        init_recycleview();
+        if (!ThreadCreated) {
+            ReceiveMessages();
+            ThreadCreated = true;
+        }
+        userName = loaduserName();
+        toName = null;
+        FileListFriends = userName + "ListFriends.txt";
+        initialize_recyclerview();
         CheckLoadFriends();
         PutSearchResultRecycler();
 
     }
 
-    void init_recycleview ()
-    {
-        // user_adapter to bind info with recycleview by put new msgList in listFriends and notify it by recycleview
-        user_adapter=new User_Adapter(listFriends,R.layout.list_friends,this);
+    String loaduserName (){
+        ArrayList<User> List = null;
+        String username = null;
+        FileInputStream fis;
+        try {
+            fis = openFileInput("UserName.txt");
+            ObjectInputStream Ois = new ObjectInputStream(fis);
+            List = (ArrayList<User>) Ois.readObject();
+            Ois.close();
+        } catch (IOException | ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+        for (User user : List)
+        {
+            if (user.isSignedIn()){
+                username=user.getUserName();
+            }
+        }
+        return username;
+    }
 
-        recyclerView=(RecyclerView) findViewById(R.id.recycler_view_friends);
+    void initialize_recyclerview() {
+        // user_adapter to bind info with recycleview by put new msgList in listFriends and notify it by recycleview
+        user_adapter = new User_Adapter(listFriends, R.layout.list_friends, this);
+
+        /*User user = new User("omar");
+        listFriends.add(user);*/
+
+        recyclerView = (RecyclerView) findViewById(R.id.recycler_view_friends);
 
         // to scroll vertically
         LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this);
@@ -75,36 +103,13 @@ public class MainActivity extends AppCompatActivity implements ItemClickListener
         user_adapter.setClickListener(this);
     }
 
-    void init_username ()
-    {
-        try {
-            userName = Load_UserName();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    public String Load_UserName () throws IOException
-    {
-        FileInputStream fis = openFileInput("UserName.txt");
-         int size = fis.available();
-         byte [] buffer = new byte[size];
-         fis.read(buffer);
-         fis.close();
-         String user = new String(buffer);
-
-        return user;
-    }
-
-     void CheckLoadFriends()
-    {
-        check=fileExists(this,FileListFriends);
+    void CheckLoadFriends() {
+        check = fileExists(this, FileListFriends);
         if (check)
             LoadFriendsFromFile();
     }
 
-    void LoadFriendsFromFile()
-    {
+    void LoadFriendsFromFile() {
         ArrayList<User> List = null;
         FileInputStream fis;
         try {
@@ -115,29 +120,27 @@ public class MainActivity extends AppCompatActivity implements ItemClickListener
         } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
         }
-        for (User user : List)
-        {
+        for (User user : List) {
             listFriends.add(user);
         }
     }
 
-    void PutSearchResultRecycler ()
-    {
+    void PutSearchResultRecycler() {
         // TO PUT USER IN RECYCLERVIEW THAT YOU CLICKED ON HIS CARD VIEW (GET OBJECT) FROM SEARCH_ACTIVITY
         Intent intent = getIntent();
         User new_user = new User(intent.getStringExtra("userName"));
 
-        if (new_user.getUserName() !=null && LoadListFriendsToVerfiy(new_user.getUserName(),listFriends)) {
+        if (new_user.getUserName() != null && LoadListFriendsToVerfiy(new_user.getUserName(), listFriends)) {
             listFriends.add(new_user);
             StoreListFriends(listFriends);
         }
     }
 
-     void StoreListFriends (ArrayList<User> arrayList)
-    {
+    void StoreListFriends(ArrayList<User> arrayList) {
+
         FileOutputStream fos = null;
         try {
-            fos = openFileOutput(FileListFriends,MODE_PRIVATE);
+            fos = openFileOutput(FileListFriends, MODE_PRIVATE);
             ObjectOutputStream Oos = new ObjectOutputStream(fos);
             Oos.writeObject(arrayList);
             Oos.flush();
@@ -146,20 +149,19 @@ public class MainActivity extends AppCompatActivity implements ItemClickListener
             e.printStackTrace();
         }
     }
-                    // dont repeat user
-    boolean LoadListFriendsToVerfiy (String Name,ArrayList<User> List)
-    {  Boolean check=true;
-        for (User user : List)
-        {
-         if (user.getUserName().equals(Name))
-            check=false;
+
+    // dont repeat user
+    boolean LoadListFriendsToVerfiy(String Name, ArrayList<User> List) {
+        Boolean check = true;
+        for (User user : List) {
+            if (user.getUserName().equals(Name))
+                check = false;
         }
         return check;
     }
 
     @Override
-    public void onBackPressed()
-    {
+    public void onBackPressed() {
         Intent intent = new Intent(Intent.ACTION_MAIN);
         intent.addCategory(Intent.CATEGORY_HOME);
         intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);//***Change Here***
@@ -169,45 +171,33 @@ public class MainActivity extends AppCompatActivity implements ItemClickListener
     }
 
     @Override
-    public boolean onCreateOptionsMenu(Menu menu)
-    {
+    public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.menu_main, menu);
         return true;
     }
 
     @Override
-    public boolean onOptionsItemSelected(MenuItem item)
-    {
+    public boolean onOptionsItemSelected(MenuItem item) {
 
-        if (item.getItemId()==R.id.action_search)
-        {
-            intent =new Intent(this,Search_Activity.class);
+        if (item.getItemId() == R.id.action_search) {
+            intent = new Intent(this, Search_Activity.class);
             startActivity(intent);
         }
 
-        if (item.getItemId()==R.id.log_out)
-        {
-            intent =new Intent(this,Start_Activity.class);
-            startActivity(intent);
+        if (item.getItemId() == R.id.log_out) {
         }
-        if(item.getItemId()==R.id.set)
-        {
-            Bundle b=getIntent().getExtras();
-            b.getString("user");
-            intent = new Intent(this, Settings_Activity.class);
-            intent.putExtras(b);
-            startActivity(intent);
+        if (item.getItemId() == R.id.deleteAccount) {
+
         }
 
 
         return super.onOptionsItemSelected(item);
     }
 
-    boolean fileExists(Context context, String filename)
-    {
+    boolean fileExists(Context context, String filename) {
         File file = context.getFileStreamPath(filename);
-        if(file == null || !file.exists()) {
+        if (file == null || !file.exists()) {
             return false;
         }
         return true;
@@ -217,46 +207,70 @@ public class MainActivity extends AppCompatActivity implements ItemClickListener
     public void onClick(View view, int position) {
         final User user = listFriends.get(position);
         toName = user.getUserName();
-        SwitchThread();
-        Intent intent=new Intent(MainActivity.this,Messages_Activity.class);
+        Intent intent = new Intent(MainActivity.this, Messages_Activity.class);
         startActivity(intent);
     }
 
-    private void SwitchThread() {
-        if (inMainActivity)
-            inMainActivity =false;
+    void ReceiveMessages() {Thread thread = new Thread(new Runnable() {
+        @Override
+        public void run() {
+            boolean check,check1,checkFile;
+            while (true) {
+                try {
+                    MSG = (Message) ois.readObject();
+                } catch (IOException | ClassNotFoundException e) {
+                    e.printStackTrace();
+                }
+                if (MSG.getKind().equals("search_request")) {
+                    searchActivity.release();
+                    try {
+                        mainActivity.acquire();
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                } else if (!MSG.getFrom().equals(toName)) {
 
-        Log.d("1MAIN","step3");
-    }
+                    checkFile = fileExists(getApplicationContext(),FileListFriends);
+                    if (checkFile){
+                        check1 = verifySender(MSG);
+                        if (!check1)
+                            addNewFriend();
+                    }
+                    else
+                        addNewFriend();
 
-    void RecieveMessages (){
-         Log.d("1MAIN","step1");
-            Thread thread = new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    while (inMainActivity)
-                    {
-                        try {
-                            MSG = (Message) ois.readObject();
-                            Log.d("MAIN1ACTIV","step2");
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        } catch (ClassNotFoundException e) {
-                            e.printStackTrace();
-                        }
-                        boolean check = fileExists(getApplicationContext(),userName + "," + MSG.getFrom() + ".txt");
-                        if (check)
-                            list = LoadMessages(userName + "," + MSG.getFrom() + ".txt");
 
-                        list.add(MSG);
-                        StoreMessages(list,userName + "," + MSG.getFrom() + ".txt");
+                    check = fileExists(getApplicationContext(), userName + "," + MSG.getFrom() + ".txt");
+                    if (check)
+                        listMessages = LoadMessages(userName + "," + MSG.getFrom() + ".txt");
+                    listMessages.add(MSG);
+                    StoreMessages(listMessages, userName + "," + MSG.getFrom() + ".txt");
+
+                } else {
+
+                    checkFile = fileExists(getApplicationContext(),FileListFriends);
+                    if (checkFile){
+                        check1 = verifySender(MSG);
+                        if (!check1)
+                            addNewFriend();
+                    }
+                    else
+                        addNewFriend();
+
+                    messageActivity.release();
+                    try {
+                        mainActivity.acquire();
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
                     }
                 }
-            });
-            thread.start();
+            }
+        }
+    });
+        thread.start();
     }
 
-    ArrayList<Message> LoadMessages (String File){
+    ArrayList<Message> LoadMessages(String File) {
         ArrayList<Message> List = null;
         FileInputStream fis;
         try {
@@ -283,5 +297,34 @@ public class MainActivity extends AppCompatActivity implements ItemClickListener
         }
     }
 
+    boolean verifySender (Message msg){
+        boolean check = false;
+        ArrayList<User> List = null;
+        FileInputStream fis;
+        try {
+            fis = openFileInput(FileListFriends);
+            ObjectInputStream Ois = new ObjectInputStream(fis);
+            List = (ArrayList<User>) Ois.readObject();
+            Ois.close();
+        } catch (IOException | ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+         for (User user : List){
+             if (user.getUserName().equals(msg.getFrom())){
+                 check=true;
+                 break;
+             }
+         }
+     return check;
+    }
+
+    void addNewFriend (){
+
+            User newFriend = new User(MSG.getFrom());
+            listFriends.add(newFriend);
+            int new_position = (listFriends.size() - 1);
+            user_adapter.notifyItemInserted(new_position);
+            StoreListFriends(listFriends);
+    }
 
 }

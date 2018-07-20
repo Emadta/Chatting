@@ -8,9 +8,8 @@
         android:icon="@android:drawable/ic_menu_search"
         android:title="Search"
         app:showAsAction="ifRoom" />
-    <item android:title="Log out" android:id="@+id/log_out"
-        app:showAsAction="ifRoom"
+    <item android:title="Sign out" android:id="@+id/log_out"
         ></item>
-    <item android:title="Settings Account" android:id="@+id/set"></item>
+    <item android:title="Delete Account" android:id="@+id/deleteAccount"></item>
 
 </menu>

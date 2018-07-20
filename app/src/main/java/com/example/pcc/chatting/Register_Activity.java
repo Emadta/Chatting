@@ -1,5 +1,6 @@
 package com.example.pcc.chatting;
 
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.support.design.widget.TextInputLayout;
@@ -9,8 +10,13 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.util.ArrayList;
 
 import static com.example.pcc.chatting.Begin_Activity.oos;
 import static com.example.pcc.chatting.Begin_Activity.ois;
@@ -23,8 +29,8 @@ public class Register_Activity extends AppCompatActivity {
     Intent intent;
     Boolean result;
     User user_details=null;
-    String userName; // this to use it in message_activity,class Message(String from)
-    String Password,Email;
+    ArrayList<User> listInFile = new ArrayList<>();
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -33,11 +39,7 @@ public class Register_Activity extends AppCompatActivity {
         txin1=(TextInputLayout)findViewById(R.id.txt_inp_Lay1);
         txin2=(TextInputLayout)findViewById(R.id.txt_inp_Lay2);
         txin3=(TextInputLayout)findViewById(R.id.txt_inp_Lay3);
-        
-        userName = txin1.getEditText().getText().toString();
-        Password = txin2.getEditText().getText().toString();
-        Email= txin3.getEditText().getText().toString();
-        
+
         btn_signup=(Button)findViewById(R.id.btn_sign_up);
 
         btn_signup.setOnClickListener(new View.OnClickListener() {
@@ -49,8 +51,7 @@ public class Register_Activity extends AppCompatActivity {
 
     }
 
-    void Register ()
-    {
+    void Register () {
         Thread t=new Thread(new Runnable() {
             @Override
             public void run() {
@@ -58,21 +59,24 @@ public class Register_Activity extends AppCompatActivity {
                     oos.writeInt(1);
                     oos.flush();
 
-                    //SEND INFORMATION
                     user_details = new User(txin1.getEditText().getText().toString(),txin3.getEditText().getText().toString(), txin2.getEditText().getText().toString());
                     oos.writeObject(user_details);
                     oos.flush();
 
                     result = ois.readBoolean();
-                    // VALIDATE IF ACCOUNT IS ALREADY USED OR NOT
                     if (!result)
-                    { // IS USED (MSG BOX)
+                    {
                         Alert_Dialog();
                     }
                     else if (result) {
-                        // IS NOT USED , THAT MEAN IS ACCEPTABLE
-                        // save username to use it in messaging
-                        Save_Username (txin1.getEditText().getText().toString());
+
+                        ois.readUTF();
+
+                        boolean check = fileExists(getApplicationContext(), "UserName.txt");
+                        if (check)
+                        listInFile = loadUsersInFile ();
+
+                        storeUsersInFile(txin1.getEditText().getText().toString(),listInFile);
                         Go_Main_Activity();
                     }
                 } catch (IOException e) {
@@ -83,8 +87,7 @@ public class Register_Activity extends AppCompatActivity {
         t.start();
     }
 
-    void Alert_Dialog()
-    {
+    void Alert_Dialog() {
         Register_Activity.this.runOnUiThread(new Runnable() {
             @Override
             public void run() {
@@ -102,16 +105,45 @@ public class Register_Activity extends AppCompatActivity {
         });
     }
 
-    void Save_Username (String username) throws IOException
-    {
-        FileOutputStream fos = openFileOutput("UserName.txt",MODE_PRIVATE);
-        fos.write(username.getBytes());
-        fos.flush();
-        fos.close();
+    boolean fileExists(Context context, String filename) {
+        File file = context.getFileStreamPath(filename);
+        if (file == null || !file.exists()) {
+            return false;
+        }
+        return true;
     }
 
-    void Go_Main_Activity ()
-    {
+    ArrayList<User> loadUsersInFile (){
+
+        ArrayList<User> List = null;
+        FileInputStream fis;
+        try {
+            fis = openFileInput("UserName.txt");
+            ObjectInputStream Ois = new ObjectInputStream(fis);
+            List = (ArrayList<User>) Ois.readObject();
+            Ois.close();
+        } catch (IOException | ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+        return List;
+    }
+
+    void storeUsersInFile(String username , ArrayList<User> list) throws IOException {
+        User user = new User(username,true);
+        list.add(user);
+        FileOutputStream fos = null;
+        try {
+            fos = openFileOutput("UserName.txt", MODE_PRIVATE);
+            ObjectOutputStream Oos = new ObjectOutputStream(fos);
+            Oos.writeObject(list);
+            Oos.flush();
+            Oos.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    void Go_Main_Activity () {
         Register_Activity.this.runOnUiThread(new Runnable() {
             @Override
             public void run() {

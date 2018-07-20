@@ -25,17 +25,15 @@ public class User implements Serializable {
 
     }
 
-   /* public User(String userName, String password, String email,long id) {
-        this.userName = userName;
-        this.password = password;
-        Email = email;
-        this.id = id;
-    }*/
-
     public User(String userName , String email , String password) {
         this.userName = userName;
         this.password = password;
         Email = email;
+    }
+
+    public User(String userName, boolean signedIn) {
+        this.userName = userName;
+        SignedIn = signedIn;
     }
 
     public User(String username) {
@@ -91,11 +89,4 @@ public class User implements Serializable {
         Email = email;
     }
 
-    public void printUser(){
-        System.out.println("\n      id       : "+id+
-                "\n      name     : "+ userName +
-                "\n      Email    : "+Email+
-                "\n      password : "+ password);
-        System.out.println("\n _____________________________");
-    }
 }
