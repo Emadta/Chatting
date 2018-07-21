@@ -1,10 +1,8 @@
 package com.example.pcc.chatting;
 
-import android.app.Activity;
+
 import android.content.Context;
-import android.content.Intent;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -16,7 +14,6 @@ import java.util.ArrayList;
 
 class User_Adapter extends RecyclerView.Adapter<User_Adapter.Myviewholder> {
     ArrayList<User> list;
-    static String x;
     private int rowLayout;
     private Context mContext;
     private ItemClickListener clickListener;
@@ -40,17 +37,6 @@ class User_Adapter extends RecyclerView.Adapter<User_Adapter.Myviewholder> {
     public void onBindViewHolder(Myviewholder holder, int position) {
         final User user= list.get(position);
         holder.txtview.setText(user.getUserName());
-        /*holder.linearLayout.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-
-                x=user.getUserName();
-                Intent intent=new Intent(v.getContext(),Messages_Activity.class);
-                //send with intent, username to message_activity ,to send it to server in (string to)
-                v.getContext().startActivity(intent);
-            }
-        });*/
-
     }
 
     @Override

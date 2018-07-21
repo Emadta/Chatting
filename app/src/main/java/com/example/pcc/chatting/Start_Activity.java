@@ -36,47 +36,24 @@ public class Start_Activity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
 
-                //set_status(2);
+
                 Go_Signin_Activity();
 
             }
         });
     }
-
-
-
-      // 1 for regiester 2 for sign in
-    /*void set_status(final int value)
-    {
-        Thread t = new Thread(new Runnable() {
-        @Override
-        public void run() {
-            try {
-                //FIXME :
-                //Begin_Activity.s= new Socket(Begin_Activity.IP,8080);
-                Begin_Activity.dout.writeInt(value);
-                //dout.close();
-                //s.close();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-    });
-        t.start();
-    }*/
-
-
-
     void Go_Register_Activity ()
     {
         Intent intent=new Intent(Start_Activity.this,Register_Activity.class);
         startActivity(intent);
+        finish();
 
     }
     void Go_Signin_Activity ()
     {
         Intent intent=new Intent(Start_Activity.this,Signin_Activity.class);
         startActivity(intent);
+        finish();
     }
 
 

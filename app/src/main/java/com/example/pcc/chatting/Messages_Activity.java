@@ -192,7 +192,7 @@ public class Messages_Activity extends AppCompatActivity {
     void DetermineTypeOfMessage(String type) {
         switch (type){
             case "TEXT" :
-                MSG = new Message(editText.getText().toString().trim(), MainActivity.userName, MainActivity.toName, Message.TEXT_MSG, "private_chat");
+                MSG = new Message(editText.getText().toString().trim().toLowerCase(), MainActivity.userName, MainActivity.toName, Message.TEXT_MSG, "private_chat");
                 AddMessageToRecyclerView(MSG);
                 editText.setText("");
                 break;
@@ -220,10 +220,10 @@ public class Messages_Activity extends AppCompatActivity {
             message_adapter.notifyItemInserted(new_position);
             recyclerView.scrollToPosition(new_position);
             StoreMessages(listMessages, FileMessages);
-            initilaizeToSend(Msg);
+            prepareToSend(Msg);
     }
 
-    void initilaizeToSend (Message Msg) {
+    void prepareToSend(Message Msg) {
 
         switch (Msg.getType())
         {

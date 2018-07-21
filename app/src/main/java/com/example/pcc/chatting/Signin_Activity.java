@@ -58,16 +58,16 @@ public class Signin_Activity extends AppCompatActivity {
                     if (user_or_email.contains("@")) {
 
                         user_details = new User();
-                        user_details.setEmail(textInputLayout.getEditText().getText().toString());
-                        user_details.setPassword(textInputLayout1.getEditText().getText().toString());
+                        user_details.setEmail(textInputLayout.getEditText().getText().toString().trim().toLowerCase());
+                        user_details.setPassword(textInputLayout1.getEditText().getText().toString().trim().toLowerCase());
                         oos.writeObject(user_details);
                         oos.flush();
 
                     } else {
 
                         user_details = new User();
-                        user_details.setUserName(textInputLayout.getEditText().getText().toString());
-                        user_details.setPassword(textInputLayout1.getEditText().getText().toString());
+                        user_details.setUserName(textInputLayout.getEditText().getText().toString().trim().toLowerCase());
+                        user_details.setPassword(textInputLayout1.getEditText().getText().toString().trim().toLowerCase());
                         oos.writeObject(user_details);
                         oos.flush();
                     }

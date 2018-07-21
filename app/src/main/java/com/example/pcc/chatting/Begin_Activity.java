@@ -18,7 +18,7 @@ public class Begin_Activity extends AppCompatActivity {
     Boolean result;
     Intent intent;
     public static Socket s=null;
-    public static final String IP = "192.168.1.107";
+    public static final String IP = "192.168.1.114";
     public static ObjectOutputStream oos=null;
     public static ObjectInputStream ois=null;
 

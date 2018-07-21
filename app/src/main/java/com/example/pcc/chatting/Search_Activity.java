@@ -60,7 +60,7 @@ public class Search_Activity extends AppCompatActivity {
             @Override
             public void run() {
                 try {
-                    user_to_send = new Message(username_search.getEditText().getText().toString(), "search_request");
+                    user_to_send = new Message(username_search.getEditText().getText().toString().trim().toLowerCase(), "search_request");
                     oos.writeObject(user_to_send);
                     oos.flush();
 

@@ -16,8 +16,8 @@
 
         <ImageView
             android:id="@+id/chat_left_img_view"
-            android:layout_width="200dp"
-            android:layout_height="200dp"
+            android:layout_width="160dp"
+            android:layout_height="160dp"
             android:layout_gravity="center"
             android:layout_margin="10dp"
 
@@ -35,20 +35,9 @@
             />
 
         <VideoView
-            android:layout_width="200dp"
-            android:layout_height="200dp"
             android:id="@+id/left_video_view"
-            />
-        <ToggleButton
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:id="@+id/left_btn_audio"
-            android:textOff="Stop"
-            android:textOn="play"
-            android:background="@drawable/bubble"
-            android:textColor="@color/colorwhite"
-            />
-
+            android:layout_width="200dp"
+            android:layout_height="200dp" />
     </LinearLayout>
 
     <LinearLayout
@@ -61,8 +50,8 @@
         >
         <ImageView
             android:id="@+id/chat_right_img_view"
-            android:layout_width="200dp"
-            android:layout_height="200dp"
+            android:layout_width="160dp"
+            android:layout_height="160dp"
             android:layout_gravity="center"
             android:layout_margin="10dp"
             />
@@ -83,20 +72,7 @@
             android:layout_width="200dp"
             android:layout_height="200dp"
             android:id="@+id/right_video_view"
-
             />
-
-        <ToggleButton
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:id="@+id/right_btn_audio"
-            android:textOff="stop"
-            android:textOn="play"
-            android:background="@drawable/bubble_2"
-            android:textColor="@color/colorwhite"
-
-            />
-
     </LinearLayout>
 
 </LinearLayout>

@@ -53,7 +53,7 @@ public class Register_Activity extends AppCompatActivity {
                     oos.writeInt(1);
                     oos.flush();
 
-                    user_details = new User(txin1.getEditText().getText().toString(),txin3.getEditText().getText().toString(), txin2.getEditText().getText().toString());
+                    user_details = new User(txin1.getEditText().getText().toString().trim().toLowerCase(),txin3.getEditText().getText().toString().trim().toLowerCase(), txin2.getEditText().getText().toString().trim().toLowerCase());
                     oos.writeObject(user_details);
                     oos.flush();
 

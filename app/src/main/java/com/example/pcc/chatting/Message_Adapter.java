@@ -2,36 +2,22 @@ package com.example.pcc.chatting;
 
 
 
-import android.content.ContentResolver;
-import android.content.ContentValues;
+
 import android.content.Context;
-import android.content.pm.PackageManager;
-import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.media.AudioManager;
-import android.media.MediaPlayer;
-import android.net.Uri;
-import android.os.Environment;
-import android.provider.MediaStore;
 import android.support.v7.widget.RecyclerView;
-import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
-import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.MediaController;
 import android.widget.TextView;
-import android.widget.ToggleButton;
 import android.widget.VideoView;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.net.URI;
 import java.util.ArrayList;
 
 class Message_Adapter extends RecyclerView.Adapter<Message_Adapter.Myviewholder> {
@@ -70,7 +56,6 @@ class Message_Adapter extends RecyclerView.Adapter<Message_Adapter.Myviewholder>
 
                        holder.vid_left.setVisibility(VideoView.GONE);
 
-                       holder.audio_left.setVisibility(Button.GONE);
 
                    }
                    // if MSG= text and is sender is (to)
@@ -86,7 +71,6 @@ class Message_Adapter extends RecyclerView.Adapter<Message_Adapter.Myviewholder>
 
                        holder.vid_right.setVisibility(VideoView.GONE);
 
-                       holder.audio_right.setVisibility(Button.GONE);
                    }
 
 
@@ -103,8 +87,6 @@ class Message_Adapter extends RecyclerView.Adapter<Message_Adapter.Myviewholder>
                        holder.img_left.setVisibility(ImageView.VISIBLE);
 
                        holder.vid_left.setVisibility(VideoView.GONE);
-
-                       holder.audio_left.setVisibility(Button.GONE);
 
                        holder.img_left.setImageBitmap(bitmap);
 
@@ -124,8 +106,6 @@ class Message_Adapter extends RecyclerView.Adapter<Message_Adapter.Myviewholder>
 
                        holder.vid_right.setVisibility(VideoView.GONE);
 
-                       holder.audio_right.setVisibility(Button.GONE);
-
                        holder.img_right.setImageBitmap(bitmap);
 
                    }
@@ -141,8 +121,6 @@ class Message_Adapter extends RecyclerView.Adapter<Message_Adapter.Myviewholder>
                        holder.img_left.setVisibility(ImageView.GONE);
 
                        holder.vid_left.setVisibility(VideoView.VISIBLE);
-
-                       holder.audio_left.setVisibility(Button.GONE);
 
                        MediaController mediaController = new MediaController(this.mcontext);
                        holder.vid_left.setVideoPath(message.getMsg());
@@ -165,8 +143,6 @@ class Message_Adapter extends RecyclerView.Adapter<Message_Adapter.Myviewholder>
 
                        holder.vid_right.setVisibility(VideoView.VISIBLE);
 
-                       holder.audio_right.setVisibility(Button.GONE);
-
                        MediaController mediaController = new MediaController(this.mcontext);
                        holder.vid_right.setVideoPath(message.getMsg());
                        holder.vid_right.setMediaController(mediaController);
@@ -176,61 +152,6 @@ class Message_Adapter extends RecyclerView.Adapter<Message_Adapter.Myviewholder>
 
                    }
 
-                   else if (MainActivity.userName.equals(message.getFrom()) && Message.AUDIO_MSG.equals(message.getType())) {
-
-                       holder.linearLayout_left.setVisibility(LinearLayout.VISIBLE);
-
-                       holder.textView_left.setVisibility(TextView.GONE);
-
-                       holder.linearLayout_right.setVisibility(LinearLayout.GONE);
-
-                       holder.img_left.setVisibility(ImageView.GONE);
-
-                       holder.vid_left.setVisibility(VideoView.GONE);
-
-                       holder.audio_left.setVisibility(Button.VISIBLE);
-
-                       final Uri uri = Uri.fromFile(new File(message.getMsg()));
-
-                       final MediaPlayer mediaPlayer = new MediaPlayer();
-
-                       holder.audio_left.setOnClickListener(new View.OnClickListener() {
-                           @Override
-                           public void onClick(View v) {
-                               mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
-                               boolean on = ((ToggleButton) v).isChecked();
-                               if (on) {
-                                   try {
-                                       mediaPlayer.reset();
-                                       mediaPlayer.setDataSource(v.getContext(),uri);
-                                       mediaPlayer.prepare();
-                                       mediaPlayer.start();
-                                   } catch (IOException e) {
-                                       e.printStackTrace();
-                                   }
-                               } else {
-                                   mediaPlayer.stop();
-
-                               }
-                           }
-                       });
-                   }
-
-                   else if (!MainActivity.userName.equals(message.getFrom()) && Message.AUDIO_MSG.equals(message.getType())) {
-
-                       holder.linearLayout_right.setVisibility(LinearLayout.VISIBLE);
-
-                       holder.textView_right.setVisibility(TextView.GONE);
-
-                       holder.linearLayout_left.setVisibility(LinearLayout.GONE);
-
-                       holder.img_right.setVisibility(ImageView.GONE);
-
-                       holder.vid_right.setVisibility(VideoView.GONE);
-
-                       holder.audio_right.setVisibility(Button.VISIBLE);
-
-                   }
 
     }
 
@@ -255,9 +176,6 @@ class Message_Adapter extends RecyclerView.Adapter<Message_Adapter.Myviewholder>
         VideoView vid_left;
         VideoView vid_right;
 
-        ToggleButton audio_left;
-        ToggleButton audio_right;
-
 
 
 
@@ -269,18 +187,12 @@ class Message_Adapter extends RecyclerView.Adapter<Message_Adapter.Myviewholder>
 
             textView_left=(TextView)itemView.findViewById(R.id.chat_left_msg_text_view);
             textView_right=(TextView)itemView.findViewById(R.id.chat_right_msg_text_view);
-            
-            
-                          // // FIXME: 04/07/2018 
+
             img_left = (ImageView) itemView.findViewById(R.id.chat_left_img_view);
             img_right = (ImageView) itemView.findViewById(R.id.chat_right_img_view);
 
             vid_left = (VideoView) itemView.findViewById(R.id.left_video_view);
             vid_right = (VideoView) itemView.findViewById(R.id.right_video_view);
-
-            audio_left = (ToggleButton) itemView.findViewById(R.id.left_btn_audio);
-            audio_right = (ToggleButton) itemView.findViewById(R.id.right_btn_audio);
-
 
         }
     }

@@ -54,7 +54,7 @@ public class MainActivity extends AppCompatActivity implements ItemClickListener
         getSupportActionBar().setTitle("4Chat");
 
         userName = loadUserName();
-        toName = null;
+        toName = "";
         FileListFriends ="ListFriends.txt";
 
         if (!ThreadCreated) {
@@ -168,7 +168,7 @@ public class MainActivity extends AppCompatActivity implements ItemClickListener
     public void onBackPressed() {
         Intent intent = new Intent(Intent.ACTION_MAIN);
         intent.addCategory(Intent.CATEGORY_HOME);
-        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);//***Change Here***
+        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
         startActivity(intent);
         finish();
         System.exit(0);
@@ -257,6 +257,7 @@ public class MainActivity extends AppCompatActivity implements ItemClickListener
                             } else {
                                 addNewFriend();
                             }
+
                             check = fileExists(getApplicationContext(), userName + "," + MSG.getFrom() + ".txt");
                             if (check)
                                 listMessages = LoadMessages(userName + "," + MSG.getFrom() + ".txt");
