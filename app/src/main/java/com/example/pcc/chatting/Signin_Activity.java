@@ -7,7 +7,6 @@ import android.os.Bundle;
 import android.support.design.widget.TextInputLayout;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 
@@ -15,10 +14,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.util.ArrayList;
-
 import static com.example.pcc.chatting.Begin_Activity.ois;
 import static com.example.pcc.chatting.Begin_Activity.oos;
 
@@ -32,7 +27,6 @@ public class Signin_Activity extends AppCompatActivity {
     String user_or_email;
     String password;
     String resultUsername;
-    ArrayList<User> listInFile = new ArrayList<>();
 
 
     @Override
@@ -79,19 +73,24 @@ public class Signin_Activity extends AppCompatActivity {
                     }
 
                     result = ois.readBoolean();
-                    resultUsername=ois.readUTF();
-
 
                     if (result) {
+                        String name=null;
+                        resultUsername=ois.readUTF();
+                        if (fileExists(getApplicationContext(),"UserName.txt")){
+                            name = loadUserName();
+                            if (!name.equals(resultUsername)){
+                                boolean del = deleteFile("UserName.txt");
+                                del = deleteFile("ListFriends.txt");
+                                storeUsername(resultUsername);
+                            }
+                        }
+                        else
+                            storeUsername(resultUsername);
 
-                        boolean check = fileExists(getApplicationContext(), "UserName.txt");
-                        if (check)
-                            listInFile = loadUsersInFile (resultUsername);
-
-                        storeUsersInFile(listInFile,resultUsername);
                         Go_Main_Activity();
 
-                    } else if (!result) {
+                    } else {
                         Alert_Dialog();
                     }
                 } catch (IOException e) {
@@ -102,52 +101,13 @@ public class Signin_Activity extends AppCompatActivity {
         t.start();
     }
 
-    boolean fileExists(Context context, String filename) {
-        File file = context.getFileStreamPath(filename);
-        if (file == null || !file.exists()) {
-            return false;
-        }
-        return true;
-    }
-
-    ArrayList<User> loadUsersInFile (String username){
-        ArrayList<User> List = null;
-        ArrayList<User> List1 = null;
-        FileInputStream fis;
-        try {
-            fis = openFileInput("UserName.txt");
-            ObjectInputStream Ois = new ObjectInputStream(fis);
-            List = (ArrayList<User>) Ois.readObject();
-            Ois.close();
-        } catch (IOException | ClassNotFoundException e) {
-            e.printStackTrace();
-        }
-        for (User user : List)
-        {
-            if (user.getUserName().equals(username)){
-                user.setSignedIn(true);
-                List1.add(user);
-            }
-            else {
-                List1.add(user);
-            }
-        }
-        return List1;
-    }
-
-    void storeUsersInFile(ArrayList<User> list, String name) throws IOException {
-
-        if (list != null && list.isEmpty()){
-        User user = new User(name,true);
-        list.add(user);
-        }
+    void storeUsername (String name){
         FileOutputStream fos = null;
         try {
             fos = openFileOutput("UserName.txt", MODE_PRIVATE);
-            ObjectOutputStream Oos = new ObjectOutputStream(fos);
-            Oos.writeObject(list);
-            Oos.flush();
-            Oos.close();
+            fos.write(name.getBytes());
+            fos.flush();
+            fos.close();
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -181,4 +141,36 @@ public class Signin_Activity extends AppCompatActivity {
             }
         });
     }
+
+    public boolean deleteFile(String name){
+        File dir = getFilesDir();
+        File file = new File(dir,name);
+        boolean deleted = file.delete();
+        return deleted;
+    }
+
+    boolean fileExists(Context context, String filename) {
+        File file = context.getFileStreamPath(filename);
+        if (file == null || !file.exists()) {
+            return false;
+        }
+        return true;
+    }
+
+    String loadUserName() {
+        String username = null;
+        FileInputStream fis;
+        try {
+            fis = openFileInput("UserName.txt");
+            int size = fis.available();
+            byte [] buffer = new byte[size];
+            fis.read(buffer);
+            fis.close();
+            username = new String(buffer);
+        } catch (IOException e ) {
+            e.printStackTrace();
+        }
+        return username;
+    }
+
 }

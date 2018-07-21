@@ -1,6 +1,6 @@
 package com.example.pcc.chatting;
 
-import android.content.Context;
+
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.support.design.widget.TextInputLayout;
@@ -11,13 +11,8 @@ import android.view.View;
 import android.widget.Button;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.util.ArrayList;
-
 import static com.example.pcc.chatting.Begin_Activity.oos;
 import static com.example.pcc.chatting.Begin_Activity.ois;
 
@@ -25,11 +20,10 @@ public class Register_Activity extends AppCompatActivity {
     private TextInputLayout txin1;
     private TextInputLayout txin2;
     private TextInputLayout txin3;
-    private Button btn_signup;
     Intent intent;
     Boolean result;
     User user_details=null;
-    ArrayList<User> listInFile = new ArrayList<>();
+
 
 
     @Override
@@ -40,7 +34,7 @@ public class Register_Activity extends AppCompatActivity {
         txin2=(TextInputLayout)findViewById(R.id.txt_inp_Lay2);
         txin3=(TextInputLayout)findViewById(R.id.txt_inp_Lay3);
 
-        btn_signup=(Button)findViewById(R.id.btn_sign_up);
+        Button btn_signup = (Button) findViewById(R.id.btn_sign_up);
 
         btn_signup.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -68,15 +62,11 @@ public class Register_Activity extends AppCompatActivity {
                     {
                         Alert_Dialog();
                     }
-                    else if (result) {
-
+                    else {
                         ois.readUTF();
-
-                        boolean check = fileExists(getApplicationContext(), "UserName.txt");
-                        if (check)
-                        listInFile = loadUsersInFile ();
-
-                        storeUsersInFile(txin1.getEditText().getText().toString(),listInFile);
+                        boolean del = deleteFile("UserName.txt");
+                        del = deleteFile("ListFriends.txt");
+                        storeUsername(txin1.getEditText().getText().toString());
                         Go_Main_Activity();
                     }
                 } catch (IOException e) {
@@ -105,39 +95,13 @@ public class Register_Activity extends AppCompatActivity {
         });
     }
 
-    boolean fileExists(Context context, String filename) {
-        File file = context.getFileStreamPath(filename);
-        if (file == null || !file.exists()) {
-            return false;
-        }
-        return true;
-    }
-
-    ArrayList<User> loadUsersInFile (){
-
-        ArrayList<User> List = null;
-        FileInputStream fis;
-        try {
-            fis = openFileInput("UserName.txt");
-            ObjectInputStream Ois = new ObjectInputStream(fis);
-            List = (ArrayList<User>) Ois.readObject();
-            Ois.close();
-        } catch (IOException | ClassNotFoundException e) {
-            e.printStackTrace();
-        }
-        return List;
-    }
-
-    void storeUsersInFile(String username , ArrayList<User> list) throws IOException {
-        User user = new User(username,true);
-        list.add(user);
+    void storeUsername (String name){
         FileOutputStream fos = null;
         try {
             fos = openFileOutput("UserName.txt", MODE_PRIVATE);
-            ObjectOutputStream Oos = new ObjectOutputStream(fos);
-            Oos.writeObject(list);
-            Oos.flush();
-            Oos.close();
+            fos.write(name.getBytes());
+            fos.flush();
+            fos.close();
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -153,6 +117,13 @@ public class Register_Activity extends AppCompatActivity {
 
             }
         });
+    }
+
+    public boolean deleteFile(String name){
+        File dir = getFilesDir();
+        File file = new File(dir,name);
+        boolean deleted = file.delete();
+        return deleted;
     }
 
 }

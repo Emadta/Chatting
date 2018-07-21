@@ -17,8 +17,6 @@
         <activity android:name=".MainActivity" />
         <activity android:name=".Start_Activity" />
         <activity android:name=".Register_Activity" />
-        <activity android:name=".Status_Activity" />
-        <activity android:name=".Settings_Activity" />
         <activity android:name=".Signin_Activity" />
         <activity
             android:name=".Messages_Activity"

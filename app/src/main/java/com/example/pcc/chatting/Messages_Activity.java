@@ -44,7 +44,6 @@ import static com.example.pcc.chatting.MainActivity.messageActivity;
 
 public class Messages_Activity extends AppCompatActivity {
 
-    private Toolbar toolbarMessages;
     private static final int IMG_PICK = 10;
     private static final int VIDEO_PICK = 20;
     private ArrayList<Message> listMessages;
@@ -54,8 +53,6 @@ public class Messages_Activity extends AppCompatActivity {
     private EditText editText;
     private Message MSG;
     private String MsgVideo,video_selected_path,MsgBitmapString,FileMessages;
-    private boolean check;
-    private byte[] byteArray;
     private Bitmap image;
     volatile boolean inMessageActivity;
 
@@ -65,7 +62,7 @@ public class Messages_Activity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_messages_);
-        toolbarMessages = (Toolbar) findViewById(R.id.toolBarMessages);
+        Toolbar toolbarMessages = (Toolbar) findViewById(R.id.toolBarMessages);
         setSupportActionBar(toolbarMessages);
         getSupportActionBar().setTitle(MainActivity.toName);
         inMessageActivity=true;
@@ -113,7 +110,7 @@ public class Messages_Activity extends AppCompatActivity {
     }
 
     private void CheckFileLoadMessages() {
-        check = fileExists( FileMessages);
+        boolean check = fileExists(FileMessages);
         if (check)
             LoadMessages(FileMessages);
     }
@@ -237,7 +234,7 @@ public class Messages_Activity extends AppCompatActivity {
             case Message.IMAGE_MSG :
                 ByteArrayOutputStream bytearrayoutputstream = new ByteArrayOutputStream();
                 image.compress(Bitmap.CompressFormat.PNG, 100, bytearrayoutputstream);
-                byteArray = bytearrayoutputstream.toByteArray();
+                byte[] byteArray = bytearrayoutputstream.toByteArray();
                 MSG = new Message(byteArray, MainActivity.userName, MainActivity.toName, Msg.getType(), "private_chat");
                 break;
 
@@ -290,10 +287,7 @@ public class Messages_Activity extends AppCompatActivity {
 
     boolean fileExists( String File) {
         File file = getFileStreamPath(File);
-        if (file == null || !file.exists()) {
-            return false;
-        }
-        return true;
+        return !(file == null || !file.exists());
     }
 
     void PickImageButton() {
@@ -364,7 +358,7 @@ public class Messages_Activity extends AppCompatActivity {
         File mypath = new File(directory, "IMG" + formattedDate + ".jpg");
 
 
-        FileOutputStream fos = null;
+        FileOutputStream fos ;
         try {
             fos = new FileOutputStream(mypath);
             bitmap.compress(Bitmap.CompressFormat.PNG, 100, fos);
@@ -401,8 +395,6 @@ public class Messages_Activity extends AppCompatActivity {
             newFile.flush();
             newFile.close();
             oldFile.close();
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -411,7 +403,7 @@ public class Messages_Activity extends AppCompatActivity {
 
     byte [] ConvertVideoToByteArray (String path) {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        FileInputStream fis = null;
+        FileInputStream fis ;
         try {
             fis = new FileInputStream(new File(path));
             byte[] buf = new byte[1024];

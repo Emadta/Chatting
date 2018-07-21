@@ -21,17 +21,14 @@ public class Begin_Activity extends AppCompatActivity {
     public static final String IP = "192.168.1.107";
     public static ObjectOutputStream oos=null;
     public static ObjectInputStream ois=null;
-    private static boolean threadCreated =false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_begin_);
 
-             if (!threadCreated){
                  connectValidateMac();
-                 threadCreated = true;
-             }
+
     }
 
     private void connectValidateMac() {
@@ -41,14 +38,13 @@ public class Begin_Activity extends AppCompatActivity {
                 try {
                     s = new Socket(IP,8080);
                     String mac= getMacAddr();
-                    /*if (mac.equals("02:00:00:00:00:00"));
-                     mac = "54-8C-A0-0F-7A-DD"; //Phone Device*/
+                    if (mac.equals("02:00:00:00:00:00"))
+                     mac = "54-8C-A0-0F-7A-DD"; //Phone Device
 
                     oos = new ObjectOutputStream(new BufferedOutputStream(s.getOutputStream()));
                     oos.writeObject(mac);
                     oos.flush();
 
-                    // recieve from server , if user is signed in or was logged out
                     ois = new ObjectInputStream(new BufferedInputStream(s.getInputStream()));
 
 

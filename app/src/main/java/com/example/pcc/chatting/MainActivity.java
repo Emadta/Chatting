@@ -7,10 +7,12 @@ import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -18,16 +20,20 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.ArrayList;
+import java.util.Objects;
 import java.util.concurrent.Semaphore;
+
 import static com.example.pcc.chatting.Begin_Activity.ois;
+import static com.example.pcc.chatting.Begin_Activity.oos;
+import static com.example.pcc.chatting.Begin_Activity.s;
 
 public class MainActivity extends AppCompatActivity implements ItemClickListener {
     private Toolbar toolbar;
     User_Adapter user_adapter;
     private RecyclerView recyclerView;
-    ArrayList<User> listFriends = new ArrayList();
-    ArrayList<Message> listMessages = new ArrayList<>();
-    static String userName, toName;
+    ArrayList<User> listFriends;
+    ArrayList<Message> listMessages;
+    static String userName = "", toName;
     Intent intent;
     String FileListFriends;
     boolean check;
@@ -36,55 +42,53 @@ public class MainActivity extends AppCompatActivity implements ItemClickListener
     static Semaphore mainActivity = new Semaphore(0);
     static Semaphore searchActivity = new Semaphore(0);
     static boolean ThreadCreated = false;
+    static boolean signedIn = true;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         toolbar = (Toolbar) findViewById(R.id.tool_bar);
         setSupportActionBar(toolbar);
         getSupportActionBar().setTitle("4Chat");
 
+        userName = loadUserName();
+        toName = null;
+        FileListFriends ="ListFriends.txt";
+
         if (!ThreadCreated) {
             ReceiveMessages();
             ThreadCreated = true;
         }
-        userName = loaduserName();
-        toName = null;
-        FileListFriends = userName + "ListFriends.txt";
         initialize_recyclerview();
         CheckLoadFriends();
         PutSearchResultRecycler();
 
     }
 
-    String loaduserName (){
-        ArrayList<User> List = null;
+    String loadUserName() {
         String username = null;
         FileInputStream fis;
         try {
             fis = openFileInput("UserName.txt");
-            ObjectInputStream Ois = new ObjectInputStream(fis);
-            List = (ArrayList<User>) Ois.readObject();
-            Ois.close();
-        } catch (IOException | ClassNotFoundException e) {
+            int size = fis.available();
+            byte [] buffer = new byte[size];
+            fis.read(buffer);
+            fis.close();
+            username = new String(buffer);
+        } catch (IOException e ) {
             e.printStackTrace();
-        }
-        for (User user : List)
-        {
-            if (user.isSignedIn()){
-                username=user.getUserName();
-            }
         }
         return username;
     }
 
     void initialize_recyclerview() {
-        // user_adapter to bind info with recycleview by put new msgList in listFriends and notify it by recycleview
-        user_adapter = new User_Adapter(listFriends, R.layout.list_friends, this);
 
-        /*User user = new User("omar");
-        listFriends.add(user);*/
+        listFriends = new ArrayList<>();
+        listMessages = new ArrayList<>();
+
+        user_adapter = new User_Adapter(listFriends, R.layout.list_friends, this);
 
         recyclerView = (RecyclerView) findViewById(R.id.recycler_view_friends);
 
@@ -186,12 +190,23 @@ public class MainActivity extends AppCompatActivity implements ItemClickListener
         }
 
         if (item.getItemId() == R.id.log_out) {
+
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        oos.writeObject(new Message("", "", "", "", "sign_out"));
+                        oos.flush();
+                    } catch (IOException ignored) {
+                    }
+                }
+            }).start();
+
+
         }
         if (item.getItemId() == R.id.deleteAccount) {
 
         }
-
-
         return super.onOptionsItemSelected(item);
     }
 
@@ -211,62 +226,67 @@ public class MainActivity extends AppCompatActivity implements ItemClickListener
         startActivity(intent);
     }
 
-    void ReceiveMessages() {Thread thread = new Thread(new Runnable() {
-        @Override
-        public void run() {
-            boolean check,check1,checkFile;
-            while (true) {
-                try {
-                    MSG = (Message) ois.readObject();
-                } catch (IOException | ClassNotFoundException e) {
-                    e.printStackTrace();
-                }
-                if (MSG.getKind().equals("search_request")) {
-                    searchActivity.release();
+    void ReceiveMessages() {
+        final Thread thread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                boolean check, check1, checkFile;
+                while (signedIn) {
                     try {
-                        mainActivity.acquire();
-                    } catch (InterruptedException e) {
+                        MSG = (Message) ois.readObject();
+                    } catch (IOException | ClassNotFoundException e) {
                         e.printStackTrace();
                     }
-                } else if (!MSG.getFrom().equals(toName)) {
-
-                    checkFile = fileExists(getApplicationContext(),FileListFriends);
-                    if (checkFile){
-                        check1 = verifySender(MSG);
-                        if (!check1)
-                            addNewFriend();
+                    if (MSG.getKind().equals("search_request")) {
+                        searchActivity.release();
+                        try {
+                            mainActivity.acquire();
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
                     }
-                    else
-                        addNewFriend();
+                    if (MSG.getKind().equals("private_chat"))
+                        if (!MSG.getFrom().equals(toName)) {
 
+                            checkFile = fileExists(getApplicationContext(), FileListFriends);
+                            if (checkFile) {
+                                check1 = verifySender(MSG);
+                                if (!check1) {
+                                    addNewFriend();
+                                }
+                            } else {
+                                addNewFriend();
+                            }
+                            check = fileExists(getApplicationContext(), userName + "," + MSG.getFrom() + ".txt");
+                            if (check)
+                                listMessages = LoadMessages(userName + "," + MSG.getFrom() + ".txt");
+                            listMessages.add(MSG);
+                            StoreMessages(listMessages, userName + "," + MSG.getFrom() + ".txt");
 
-                    check = fileExists(getApplicationContext(), userName + "," + MSG.getFrom() + ".txt");
-                    if (check)
-                        listMessages = LoadMessages(userName + "," + MSG.getFrom() + ".txt");
-                    listMessages.add(MSG);
-                    StoreMessages(listMessages, userName + "," + MSG.getFrom() + ".txt");
-
-                } else {
-
-                    checkFile = fileExists(getApplicationContext(),FileListFriends);
-                    if (checkFile){
-                        check1 = verifySender(MSG);
-                        if (!check1)
-                            addNewFriend();
-                    }
-                    else
-                        addNewFriend();
-
-                    messageActivity.release();
-                    try {
-                        mainActivity.acquire();
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
+                        } else {
+                            messageActivity.release();
+                            try {
+                                mainActivity.acquire();
+                            } catch (InterruptedException e) {
+                                e.printStackTrace();
+                            }
+                        }
+                    if (MSG.getKind().equals("sign_out")) {
+                        signedIn = false;
+                        ThreadCreated = false;
+                        try {
+                            oos.close();
+                            ois.close();
+                            s.close();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                        startActivity(new Intent(MainActivity.this, Begin_Activity.class));
+                        finish();
                     }
                 }
             }
-        }
-    });
+        });
         thread.start();
     }
 
@@ -297,7 +317,7 @@ public class MainActivity extends AppCompatActivity implements ItemClickListener
         }
     }
 
-    boolean verifySender (Message msg){
+    boolean verifySender(Message msg) {
         boolean check = false;
         ArrayList<User> List = null;
         FileInputStream fis;
@@ -309,22 +329,21 @@ public class MainActivity extends AppCompatActivity implements ItemClickListener
         } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
         }
-         for (User user : List){
-             if (user.getUserName().equals(msg.getFrom())){
-                 check=true;
-                 break;
-             }
-         }
-     return check;
+        for (User user : List) {
+            if (user.getUserName().equals(msg.getFrom())) {
+                check = true;
+                break;
+            }
+        }
+        return check;
     }
 
-    void addNewFriend (){
+    void addNewFriend() {
 
-            User newFriend = new User(MSG.getFrom());
-            listFriends.add(newFriend);
-            int new_position = (listFriends.size() - 1);
-            user_adapter.notifyItemInserted(new_position);
-            StoreListFriends(listFriends);
+        User newFriend = new User(MSG.getFrom());
+        listFriends.add(newFriend);
+        int new_position = (listFriends.size() - 1);
+        user_adapter.notifyItemInserted(new_position);
+        StoreListFriends(listFriends);
     }
-
 }
