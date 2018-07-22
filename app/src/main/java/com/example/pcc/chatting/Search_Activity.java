@@ -66,6 +66,7 @@ public class Search_Activity extends AppCompatActivity {
 
                     searchActivity.acquire();
                     try {
+
                         Message receivedResult = MainActivity.MSG;
                         user_search = receivedResult.getMsg().equals("true");
 
@@ -84,7 +85,7 @@ public class Search_Activity extends AppCompatActivity {
                             runOnUiThread(new Runnable() {
                                 @Override
                                 public void run() {
-                                    txt_display_name.setText(username_search.getEditText().getText().toString());
+                                    txt_display_name.setText(username_search.getEditText().getText().toString().toLowerCase());
                                     cardView.setVisibility(CardView.VISIBLE);
                                     txt_notfound.setVisibility(TextView.INVISIBLE);
                                 }
@@ -108,7 +109,7 @@ public class Search_Activity extends AppCompatActivity {
         cardView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {Intent intent = new Intent(Search_Activity.this,MainActivity.class);
-                intent.putExtra("userName",username_search.getEditText().getText().toString());
+                intent.putExtra("userName",username_search.getEditText().getText().toString().toLowerCase());
                 startActivity(intent);
                 finish();
             }

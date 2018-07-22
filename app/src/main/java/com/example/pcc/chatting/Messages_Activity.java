@@ -40,6 +40,7 @@ import java.util.Calendar;
 import static com.example.pcc.chatting.Begin_Activity.oos;
 import static com.example.pcc.chatting.MainActivity.mainActivity;
 import static com.example.pcc.chatting.MainActivity.messageActivity;
+import static com.example.pcc.chatting.MainActivity.toName;
 
 
 public class Messages_Activity extends AppCompatActivity {
@@ -192,7 +193,7 @@ public class Messages_Activity extends AppCompatActivity {
     void DetermineTypeOfMessage(String type) {
         switch (type){
             case "TEXT" :
-                MSG = new Message(editText.getText().toString().trim().toLowerCase(), MainActivity.userName, MainActivity.toName, Message.TEXT_MSG, "private_chat");
+                MSG = new Message(editText.getText().toString().trim(), MainActivity.userName, MainActivity.toName, Message.TEXT_MSG, "private_chat");
                 AddMessageToRecyclerView(MSG);
                 editText.setText("");
                 break;
@@ -251,9 +252,7 @@ public class Messages_Activity extends AppCompatActivity {
             listMessages.add(MSG);
             int new_position = (listMessages.size() - 1);
             message_adapter.notifyItemInserted(new_position);
-            //recyclerView.scrollToPosition(new_position);
             StoreMessages(listMessages, FileMessages);
-
     }
 
     void StoreMessages(ArrayList<Message> arrayList, String File) {

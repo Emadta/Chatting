@@ -30,6 +30,7 @@ public class Register_Activity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_register_);
+
         txin1=(TextInputLayout)findViewById(R.id.txt_inp_Lay1);
         txin2=(TextInputLayout)findViewById(R.id.txt_inp_Lay2);
         txin3=(TextInputLayout)findViewById(R.id.txt_inp_Lay3);
